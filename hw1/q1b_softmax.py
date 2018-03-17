@@ -58,7 +58,7 @@ def test_softmax_basic():
     ans1 = np.array([0.26894142,  0.73105858])
     assert np.allclose(test1, ans1, rtol=1e-05, atol=1e-06)
 
-    test2 = softmax(np.array([[1001,1002],[3,4]]))
+    test2 = softmax(np.array([[1001, 1002], [3, 4]]))
     print (test2)
     ans2 = np.array([
         [0.26894142, 0.73105858],

@@ -15,6 +15,8 @@ def normalizeRows(x):
     """
 
     ### YOUR CODE HERE
+    rows_norm = np.linalg.norm(x, axis=1)[:, np.newaxis]
+    x = x / rows_norm
     ### END YOUR CODE
 
     return x
@@ -22,9 +24,9 @@ def normalizeRows(x):
 
 def test_normalize_rows():
     print "Testing normalizeRows..."
-    x = normalizeRows(np.array([[3.0,4.0],[1, 2]]))
+    x = normalizeRows(np.array([[3.0, 4.0], [1, 2]]))
     print x
-    ans = np.array([[0.6,0.8],[0.4472136,0.89442719]])
+    ans = np.array([[0.6, 0.8], [0.4472136, 0.89442719]])
     assert np.allclose(x, ans, rtol=1e-05, atol=1e-06)
     print ""
 
