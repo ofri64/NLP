@@ -59,7 +59,18 @@ def softmaxCostAndGradient(predicted, target, outputVectors, dataset):
     """
 
     ### YOUR CODE HERE
-    raise NotImplementedError
+
+    output_products_vector = np.dot(outputVectors, predicted) # vector of uoT * vc for o = 1,2, ... ,W
+    output_probabilities_vector = softmax(output_products_vector)  # vector of p(o|c) for o = 1,2, ... ,W
+
+    cost = -np.log(output_probabilities_vector[target]) # -log(p(oi|c))
+
+    gradPred = -outputVectors[target] + np.sum(output_probabilities_vector[:, np.newaxis] * outputVectors, axis=0)
+
+    target_indicator = np.zeros(outputVectors.shape[0]) # shape of vector is number of words in corpus
+    target_indicator[target] = -1 # create a vector with 0 in every index expect for target index (o index)
+    grad = predicted * (target_indicator + output_probabilities_vector)[:, np.newaxis]
+
     ### END YOUR CODE
 
     return cost, gradPred, grad
