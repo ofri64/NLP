@@ -83,9 +83,10 @@ def sgd(f, x0, step, iterations, postprocessing=None, useSaved=False,
         # Don't forget to apply the postprocessing after every iteration!
         # You might want to print the progress every few iterations.
 
-        cost = None
+        # cost = None
         ### YOUR CODE HERE
-        raise NotImplementedError
+        cost, grad = f(x)
+        x -= step * grad
         ### END YOUR CODE
 
         if iter % PRINT_EVERY == 0:
@@ -132,8 +133,38 @@ def your_sanity_checks():
     """
     print "Running your sanity checks..."
     ### YOUR CODE HERE
-    raise NotImplementedError
+
+    parab = lambda x: (x ** 2 + 2 * x, x * 2 + 2)
+
+    print "Running sanity checks..."
+    t1 = sgd(parab, 0.5, 0.01, 1000, PRINT_EVERY=100)
+    print "test 1 result:", t1
+    assert -1 - 1e-6 <= t1 <= -1 + 1e-6
+
+    t2 = sgd(parab, 0.0, 0.01, 1000, PRINT_EVERY=100)
+    print "test 2 result:", t2
+    assert -1 - 1e-6 <= t2 <= -1 + 1e-6
+
+    t3 = sgd(parab, -1.5, 0.01, 1000, PRINT_EVERY=100)
+    print "test 3 result:", t3
+    assert -1 - 1e-6 <= t3 <= -1 + 1e-6
+
+    sad_parab = lambda x: ((x-1) ** 2, 2 * (x-1))
+
+    print "Running sanity checks..."
+    t1 = sgd(sad_parab, 3.1, 0.01, 1000, PRINT_EVERY=100)
+    print "test 1 result:", t1
+    assert 1 - 1e-6 <= t1 <= 1 + 1e-6
+
+    t2 = sgd(sad_parab, -1.3, 0.01, 1000, PRINT_EVERY=100)
+    print "test 2 result:", t2
+    assert 1 - 1e-6 <= t2 <= 1 + 1e-6
+
+    t3 = sgd(sad_parab, -0.055, 0.01, 1000, PRINT_EVERY=100)
+    print "test 3 result:", t3
+    assert 1 - 1e-6 <= t3 <= 1 + 1e-6
     ### END YOUR CODE
+
 
 
 if __name__ == "__main__":
