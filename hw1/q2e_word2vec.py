@@ -15,7 +15,7 @@ def normalizeRows(x):
     """
 
     ### YOUR CODE HERE
-    rows_norm = np.linalg.norm(x, axis=1)[:, np.newaxis]
+    rows_norm = np.linalg.norm(x, axis=1).reshape(x.shape[0], 1)
     x = x / rows_norm
     ### END YOUR CODE
 
@@ -48,10 +48,8 @@ def softmaxCostAndGradient(predicted, target, outputVectors, dataset):
 
     Return:
     cost -- cross entropy cost for the softmax word prediction
-    gradPred -- the gradient with respect to the predicted word
-           vector
-    grad -- the gradient with respect to all the other word
-           vectors
+    gradPred -- the gradient with respect to the predicted word vector
+    grad -- the gradient with respect to all the other word vectors
 
     We will not provide starter code for this function, but feel
     free to reference the code you previously wrote for this
@@ -62,10 +60,11 @@ def softmaxCostAndGradient(predicted, target, outputVectors, dataset):
 
     output_products_vector = np.dot(outputVectors, predicted) # vector of uoT * vc for o = 1,2, ... ,W
     output_probabilities_vector = softmax(output_products_vector)  # vector of p(o|c) for o = 1,2, ... ,W
+    u_o = outputVectors[target]
 
     cost = -np.log(output_probabilities_vector[target]) # -log(p(oi|c))
 
-    gradPred = -outputVectors[target] + np.sum(output_probabilities_vector[:, np.newaxis] * outputVectors, axis=0)
+    gradPred = -u_o + np.sum(output_probabilities_vector[:, np.newaxis] * outputVectors, axis=0) # returning as ndarray shape=(|v|,1)
 
     target_indicator = np.zeros(outputVectors.shape[0]) # shape of vector is number of words in corpus
     target_indicator[target] = -1 # create a vector with 0 in every index expect for target index (o index)
@@ -88,8 +87,7 @@ def getNegativeSamples(target, dataset, K):
     return indices
 
 
-def negSamplingCostAndGradient(predicted, target, outputVectors, dataset,
-                               K=10):
+def negSamplingCostAndGradient(predicted, target, outputVectors, dataset, K=10):
     """ Negative sampling cost function for word2vec models
 
     Implement the cost and gradients for one predicted word vector
@@ -109,20 +107,21 @@ def negSamplingCostAndGradient(predicted, target, outputVectors, dataset,
 
     ### YOUR CODE HERE
     output_products_vector = np.dot(outputVectors, predicted) # vector of uoT * Vc for o = 1,2, ... ,W
-    output_sigmoid_vector = sigmoid(output_products_vector)  # vector of sig(u0T * Vc) for o = 1,2, ... ,W
+    output_sigmoid_vector = sigmoid(output_products_vector)  # vector of sig(uoT * Vc) for o = 1,2, ... ,W
     output_minus_sigmoid_vector = 1 - output_sigmoid_vector
 
     cost = -np.log(output_sigmoid_vector[target]) -np.sum(np.log(output_minus_sigmoid_vector[indices[1:]]))
-    # cost = -log(sig(u0T * Vc) - sum_k[log(sig(-ukT * Vc))]
+    # cost = -log(sig(uoT * Vc) - sum_k[log(sig(-ukT * Vc))]
 
-    gred_pred_max_part = -output_minus_sigmoid_vector[target] * outputVectors[target] # -sig(u0T * Vc) * u0
-    gred_pred_neg_samp_part = outputVectors[indices[1:]] * output_sigmoid_vector[indices[1:]][:, np.newaxis] # matrix with k rows of sig(ukT * Vc) * uk
-    gred_pred_sum_neg_samp = np.sum(gred_pred_neg_samp_part, axis=0) # sum the k vectors
-    gradPred = gred_pred_max_part + gred_pred_sum_neg_samp
+    grad_pred_max_part = -output_minus_sigmoid_vector[target] * outputVectors[target] # -sig(uoT * Vc) * uo
+    grad_pred_neg_samp_part = outputVectors[indices[1:]] * output_sigmoid_vector[indices[1:]][:, np.newaxis] # matrix with k rows of sig(ukT * Vc) * uk
+    grad_pred_sum_neg_samp = np.sum(grad_pred_neg_samp_part, axis=0) # sum the k vectors
+    gradPred = grad_pred_max_part + grad_pred_sum_neg_samp
 
     grad = np.zeros(outputVectors.shape) # besides u0 and uk's gradient of rest is zero
-    grad[target] = (output_sigmoid_vector[target] -1) * predicted # (grad(u0) = sig(u0T * Vc0) -1) * Vc
+    grad[target] = (output_sigmoid_vector[target] - 1) * predicted # (grad(u0) = sig(u0T * Vc0) -1) * Vc
     grad[indices[1:]] = output_sigmoid_vector[indices[1:]][:, np.newaxis] * predicted # grad(uk) = sig(ukT * Vc) * Vc
+
     ### END YOUR CODE
 
     return cost, gradPred, grad
@@ -157,7 +156,16 @@ def skipgram(currentWord, C, contextWords, tokens, inputVectors, outputVectors,
     gradOut = np.zeros(outputVectors.shape)
 
     ### YOUR CODE HERE
-    raise NotImplementedError
+
+    center_word_index = tokens[currentWord]
+    vc = inputVectors[center_word_index]
+    for output_word in contextWords:
+        output_word_index = tokens[output_word]
+        output_word_cost, vc_grad, output_grads = word2vecCostAndGradient(vc, output_word_index, outputVectors, dataset)
+        cost += output_word_cost
+        gradIn[center_word_index] += vc_grad
+        gradOut += output_grads
+
     ### END YOUR CODE
 
     return cost, gradIn, gradOut
@@ -230,17 +238,17 @@ def test_word2vec():
 if __name__ == "__main__":
     test_normalize_rows()
     # test_word2vec()
-    predicted = np.array([1, 1, 0, 1])
-    target = 1
-    outputVectors = np.array([[1, 1, 1, 2], [0, 2, 0, 2], [0, 0, 0, 0], [5, 2, 3, 1], [1, 1, 0, 0], [0, 0, 0, 1]])
-    dataset = type('dummy', (), {})()
-    def dummySampleTokenIdx():
-        return random.randint(0, 4)
+    # predicted = np.array([1, 1, 0, 1])
+    # target = 1
+    # outputVectors = np.array([[1, 1, 1, 2], [0, 2, 0, 2], [0, 0, 0, 0], [5, 2, 3, 1], [1, 1, 0, 0], [0, 0, 0, 1]])
+    # dataset = type('dummy', (), {})()
+    # def dummySampleTokenIdx():
+    #     return random.randint(0, 4)
 
-    def getRandomContext(C):
-        tokens = ["a", "b", "c", "d", "e"]
-        return tokens[random.randint(0,4)], \
-            [tokens[random.randint(0,4)] for i in xrange(2*C)]
-    dataset.sampleTokenIdx = dummySampleTokenIdx
-    dataset.getRandomContext = getRandomContext
-    negSamplingCostAndGradient(predicted, target, outputVectors, dataset, 2)
+    # def getRandomContext(C):
+    #     tokens = ["a", "b", "c", "d", "e"]
+    #     return tokens[random.randint(0,4)], \
+    #         [tokens[random.randint(0,4)] for i in xrange(2*C)]
+    # dataset.sampleTokenIdx = dummySampleTokenIdx
+    # dataset.getRandomContext = getRandomContext
+    # negSamplingCostAndGradient(predicted, target, outputVectors, dataset, 2)

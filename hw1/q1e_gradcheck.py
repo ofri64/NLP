@@ -37,8 +37,15 @@ def gradcheck_naive(f, x):
         # to test cost functions with built in randomness later.
 
         ### YOUR CODE HERE:
-        fx_plus_eps = f(x[ix] + h)[0]
-        fx_minus_eps = f(x[ix] - h)[0]
+        eps = np.zeros(x.shape)
+        eps[ix] = h
+
+        random.setstate(rndstate)
+        fx_plus_eps = f(x + eps)[0]
+
+        random.setstate(rndstate)
+        fx_minus_eps = f(x - eps)[0]
+
         numgrad = (fx_plus_eps - fx_minus_eps) / (2 * h)
         ### END YOUR CODE
 
@@ -77,10 +84,10 @@ def your_sanity_checks():
     your additional tests be graded.
     """
     print "Running your sanity checks..."
-    exp = lambda x: (np.exp(x), np.exp(x))
-    gradcheck_naive(exp, np.array(102.82))      # scalar test
-    gradcheck_naive(exp, np.array([0, 0, 0, 0]))    # 1-D test
-    gradcheck_naive(exp, np.array([[4, 5], [1, 1], [0, 0]]))   # 2-D test
+    exp_sum = lambda x: (np.sum(np.exp(x)), np.exp(x))
+    gradcheck_naive(exp_sum, np.array(102.82))      # scalar test
+    gradcheck_naive(exp_sum, np.array([0, 0, 0, 0]))    # 1-D test
+    gradcheck_naive(exp_sum, np.array([[4, 5], [1, 1], [0, 0]]))   # 2-D test
 
     zero_func = lambda x: (0, np.zeros(x.shape))
     gradcheck_naive(zero_func, np.array(10233.32))      # scalar test
