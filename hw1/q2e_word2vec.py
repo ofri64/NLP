@@ -120,7 +120,8 @@ def negSamplingCostAndGradient(predicted, target, outputVectors, dataset, K=10):
 
     grad = np.zeros(outputVectors.shape) # besides u0 and uk's gradient of rest is zero
     grad[target] = (output_sigmoid_vector[target] - 1) * predicted # (grad(u0) = sig(u0T * Vc0) -1) * Vc
-    grad[indices[1:]] = output_sigmoid_vector[indices[1:]][:, np.newaxis] * predicted # grad(uk) = sig(ukT * Vc) * Vc
+    for k in indices[1:]: # k is small ~10 maximum so this is still efficient
+        grad[k] += output_sigmoid_vector[k] * predicted # grad(uk) = sig(ukT * Vc) * Vc
 
     ### END YOUR CODE
 
@@ -237,18 +238,4 @@ def test_word2vec():
 
 if __name__ == "__main__":
     test_normalize_rows()
-    # test_word2vec()
-    # predicted = np.array([1, 1, 0, 1])
-    # target = 1
-    # outputVectors = np.array([[1, 1, 1, 2], [0, 2, 0, 2], [0, 0, 0, 0], [5, 2, 3, 1], [1, 1, 0, 0], [0, 0, 0, 1]])
-    # dataset = type('dummy', (), {})()
-    # def dummySampleTokenIdx():
-    #     return random.randint(0, 4)
-
-    # def getRandomContext(C):
-    #     tokens = ["a", "b", "c", "d", "e"]
-    #     return tokens[random.randint(0,4)], \
-    #         [tokens[random.randint(0,4)] for i in xrange(2*C)]
-    # dataset.sampleTokenIdx = dummySampleTokenIdx
-    # dataset.getRandomContext = getRandomContext
-    # negSamplingCostAndGradient(predicted, target, outputVectors, dataset, 2)
+    test_word2vec()
