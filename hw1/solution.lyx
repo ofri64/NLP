@@ -83,11 +83,11 @@ Uri Avron [uriavron@gmail.com] [308046994]
 \begin_inset Newline newline
 \end_inset
 
-Ofri Kleinfeld [] []
+Ofri Kleinfeld [ofrik@mail.tau.ac.il] [302893680]
 \begin_inset Newline newline
 \end_inset
 
-Ido Calman [] []
+Ido Calman [calman.ido@gmail.com] [308353499]
 \end_layout
 
 \begin_layout Section*
@@ -133,7 +133,8 @@ which implies that
 \frac{\partial\sigma}{\partial x} & =\frac{\partial(1+e^{-x})^{-1}}{\partial x}\\
  & =-(1+e^{-x})^{-2}(-e^{-x})=e^{-x}(1+e^{-x})^{-2}\\
  & =(\frac{1}{\sigma(x)}-1)\sigma^{2}(x)\\
- & =\sigma(x)(1-\sigma(x))
+ & =\sigma(x)(1-\sigma(x))\\
+\\
 \end{align*}
 
 \end_inset
@@ -146,12 +147,149 @@ which implies that
 \end_layout
 
 \begin_layout Description
-(a) Let us write 
-\begin_inset Formula $CE(y,\hat{y})=-y\cdot\log(\hat{y})$
+(a) Note that 
+\begin_inset Formula $y$
 \end_inset
 
-.
- Therefore the gradient with respect to 
+ is an one-hot vector and therefore 
+\begin_inset Formula $\mathrm{CE}(y,\hat{y})$
+\end_inset
+
+ is dependant only in 
+\begin_inset Formula $\hat{y}_{o}=p(o|c)$
+\end_inset
+
+, so we get:
+\begin_inset Formula 
+\[
+\mathrm{CE}(y,\hat{y})=-\sum_{o}y_{o}\cdot\log(\hat{y}_{o})=-\log(\hat{y}_{o})=-u_{o}^{T}v_{c}+\log\left(\sum_{w=\text{1}}^{W}\exp(u_{w}^{T}v_{c})\right)
+\]
+
+\end_inset
+
+Now we derive:
+\begin_inset Formula 
+\begin{align*}
+\frac{\partial\mathrm{J_{softmaxCE}}}{\partial v_{c}} & =\frac{\partial\left[-u_{o}^{T}v_{c}+\log\left(\sum_{w=\text{1}}^{W}\exp(u_{w}^{T}v_{c})\right)\right]}{\partial v_{c}}\\
+ & =-u_{o}+\left(\sum_{w=1}^{W}\exp(u_{w}^{T}v_{c})\right)^{-1}\sum_{w=1}^{W}\exp(u_{w}^{T}v_{c})\cdot u_{w}\\
+ & =-u_{o}+\sum_{w=1}^{W}\underbrace{\frac{\exp(u_{w}^{T}v_{c})}{\sum_{j=1}^{W}\exp(u_{w}^{T}v_{c})}}_{=p(w|c)}\cdot u_{w}\\
+ & =-u_{o}+\sum_{w=1}^{W}p(w|c)\cdot u_{w}
+\end{align*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Description
+(b) As in (a):
+\begin_inset Formula 
+\begin{align*}
+\frac{\partial\mathrm{J_{softmaxCE}}}{\partial u_{o}} & =-v_{c}+\left(\sum_{w=1}^{W}\exp(u_{w}^{T}v_{c})\right)^{-1}\exp(u_{o}^{T}v_{c})\cdot v_{c}\\
+ & =-v_{c}+\underbrace{\frac{\exp(u_{o}^{T}v_{c})}{\sum_{j=1}^{W}\exp(u_{w}^{T}v_{c})}}_{=p(o|c)}\cdot v_{c}\\
+ & =-v_{c}\left(1-p(o|c)\right)
+\end{align*}
+
+\end_inset
+
+
+\begin_inset Formula 
+\begin{align*}
+\frac{\partial\mathrm{J_{softmaxCE}}}{\partial u_{w\neq o}} & =\left(\sum_{j=1}^{W}\exp(u_{j}^{T}v_{c})\right)^{-1}\exp(u_{w}^{T}v_{c})\cdot v_{c}\\
+ & =-v_{c}\cdot p(w|c)
+\end{align*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Description
+(c) Using 1(c) and the fact that:
+\begin_inset Formula 
+\begin{align*}
+\sigma(x)(1-\sigma(x)) & =\sigma(x)\left(\frac{1}{1-\sigma(x)}\right)^{-1}\\
+ & =\sigma(x)\left(1+\frac{\sigma(x)}{1-\sigma(x)}\right)^{-1}\\
+ & =\sigma(x)\left(1+e^{x}\right)^{-1}\\
+ & =\sigma(x)\sigma(-x)
+\end{align*}
+
+\end_inset
+
+
+\begin_inset Newline newline
+\end_inset
+
+we get:
+\begin_inset Formula 
+\begin{align*}
+\frac{\partial\mathrm{J_{negsample}}}{\partial v_{c}} & =\frac{\partial\left(-\log\sigma(u_{o}^{T}v_{c})-\sum_{k=1}^{K}\log\sigma(-u_{k}^{T}v_{c})\right)}{\partial v_{c}}\\
+ & =-\sigma^{-1}(u_{o}^{T}v_{c})\cdot\frac{\partial\sigma(u_{o}^{T}v_{c})}{\partial v_{c}}-\sum_{k=1}^{K}\sigma^{-1}(-u_{k}^{T}v_{c})\cdot\frac{\partial\sigma(-u_{k}^{T}v_{c})}{\partial v_{c}}\\
+ & =-\sigma^{-1}(u_{o}^{T}v_{c})\cdot\sigma(u_{o}^{T}v_{c})\cdot\sigma(-u_{o}^{T}v_{c})\cdot u_{o}\\
+ & -\sum_{k=1}^{K}\sigma^{-1}(-u_{k}^{T}v_{c})\cdot\sigma(-u_{k}^{T}v_{c})\cdot\sigma(u_{k}^{T}v_{c})\cdot(-u_{k})\\
+ & =-\sigma(-u_{o}^{T}v_{c})\cdot u_{o}+\sum_{k=1}^{K}\sigma(u_{k}^{T}v_{c})\cdot u_{k}\\
+\\
+\end{align*}
+
+\end_inset
+
+
+\begin_inset Formula 
+\begin{align*}
+\frac{\partial\mathrm{J_{negsample}}}{\partial u_{o}} & =\frac{\partial\left(-\log\sigma(u_{o}^{T}v_{c})-\sum_{k=1}^{K}\log\sigma(-u_{k}^{T}v_{c})\right)}{\partial u_{o}}\\
+ & =-\sigma^{-1}(u_{o}^{T}v_{c})\cdot\frac{\partial\sigma(u_{o}^{T}v_{c})}{\partial u_{o}}\\
+ & =\sigma^{-1}(u_{o}^{T}v_{c})\sigma(u_{o}^{T}v_{c})\sigma(-u_{o}^{T}v_{c})\cdot v_{c}\\
+ & =-\sigma(-u_{o}^{T}v_{c})\cdot v_{c}\\
+ & =-\left(1-\sigma(u_{o}^{T}v_{c})\right)\cdot v_{c}\\
+ & =\left(\sigma(u_{o}^{T}v_{c})-1\right)\cdot v_{c}
+\end{align*}
+
+\end_inset
+
+
+\begin_inset Formula 
+\begin{align*}
+\frac{\partial\mathrm{J_{negsample}}}{\partial u_{k(\neq o)}} & =\frac{\partial\left(-\log\sigma(u_{o}^{T}v_{c})-\sum_{k=1}^{K}\log\sigma(-u_{k}^{T}v_{c})\right)}{\partial u_{k}}\\
+ & =-\sigma^{-1}(-u_{k}^{T}v_{c})\cdot\frac{\partial\sigma(-u_{k}^{T}v_{c})}{\partial u_{k}}\\
+ & =-\sigma^{-1}(-u_{k}^{T}v_{c})\sigma(-u_{k}^{T}v_{c})\sigma(u_{k}^{T}v_{c})\cdot(-v_{c})\\
+ & =\sigma(u_{k}^{T}v_{c})\cdot v_{c}
+\end{align*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Description
+(d) Let 
+\begin_inset Formula $F\in\{\mathrm{J_{softmaxCE},J_{negsample}}\}$
+\end_inset
+
+ so we actually found the gradients in previous sections:
+\begin_inset Formula 
+\[
+\frac{\partial\mathrm{J_{skipgram}(}w_{c},v_{c})}{\partial U}=\sum_{-m\leq j\neq0\leq m}\frac{\partial F(w_{c+j},v_{c})}{\partial U}
+\]
+
+\end_inset
+
+
+\begin_inset Formula 
+\[
+\frac{\partial\mathrm{J_{skipgram}(}w_{c},v_{c})}{\partial v_{c}}=\sum_{-m\leq j\neq0\leq m}\frac{\partial F(w_{c+j},v_{c})}{\partial v_{c}}
+\]
+
+\end_inset
+
+
+\begin_inset Formula 
+\[
+\frac{\partial\mathrm{J_{skipgram}(}w_{c},v_{c})}{\partial v_{j\neq c}}=0
+\]
+
+\end_inset
+
+
 \end_layout
 
 \end_body
