@@ -1,0 +1,363 @@
+#LyX 2.2 created this file. For more info see http://www.lyx.org/
+\lyxformat 508
+\begin_document
+\begin_header
+\save_transient_properties true
+\origin unavailable
+\textclass article
+\use_default_options true
+\maintain_unincluded_children false
+\language english
+\language_package default
+\inputencoding auto
+\fontencoding global
+\font_roman "default" "default"
+\font_sans "default" "default"
+\font_typewriter "default" "default"
+\font_math "auto" "auto"
+\font_default_family default
+\use_non_tex_fonts false
+\font_sc false
+\font_osf false
+\font_sf_scale 100 100
+\font_tt_scale 100 100
+\graphics default
+\default_output_format default
+\output_sync 0
+\bibtex_command default
+\index_command default
+\paperfontsize default
+\use_hyperref false
+\papersize default
+\use_geometry false
+\use_package amsmath 1
+\use_package amssymb 1
+\use_package cancel 1
+\use_package esint 1
+\use_package mathdots 1
+\use_package mathtools 1
+\use_package mhchem 1
+\use_package stackrel 1
+\use_package stmaryrd 1
+\use_package undertilde 1
+\cite_engine basic
+\cite_engine_type default
+\biblio_style plain
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date false
+\justification true
+\use_refstyle 1
+\index Index
+\shortcut idx
+\color #008000
+\end_index
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\paragraph_indentation default
+\quotes_language english
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\end_header
+
+\begin_body
+
+\begin_layout Title
+ADVANCED METHODS IN NLP 
+\begin_inset Newline newline
+\end_inset
+
+EXERCISE #1 SOLUTION
+\end_layout
+
+\begin_layout Author
+Uri Avron [uriavron@gmail.com] [308046994]
+\begin_inset Newline newline
+\end_inset
+
+Ofri Kleinfeld [ofrik@mail.tau.ac.il] [302893680]
+\begin_inset Newline newline
+\end_inset
+
+Ido Calman [calman.ido@gmail.com] [308353499]
+\end_layout
+
+\begin_layout Section*
+\begin_inset Newpage newpage
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+Basics
+\end_layout
+
+\begin_layout Description
+(a) Indeed, for every dimension 
+\begin_inset Formula $i$
+\end_inset
+
+:
+\begin_inset Formula 
+\[
+softmax(\textbf{x}+c)_{i}=\frac{e^{x_{i}+c}}{\sum_{j}e^{x_{j}+c}}=\frac{e^{c}e^{x_{i}}}{\sum_{j}e^{c}e^{x_{j}}}=\frac{e^{x_{i}}}{\sum_{j}e^{x_{j}}}=softmax(\textbf{{x}})_{i}
+\]
+
+\end_inset
+
+which implies that 
+\begin_inset Formula $softmax(\textbf{{x}}+c)=softmax(\textbf{{x}})$
+\end_inset
+
+.
+ 
+\begin_inset Formula $\Box$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Description
+(c) Let us compute the gradient:
+\begin_inset Formula 
+\begin{align*}
+\frac{\partial\sigma}{\partial x} & =\frac{\partial(1+e^{-x})^{-1}}{\partial x}\\
+ & =-(1+e^{-x})^{-2}(-e^{-x})=e^{-x}(1+e^{-x})^{-2}\\
+ & =(\frac{1}{\sigma(x)}-1)\sigma^{2}(x)\\
+ & =\sigma(x)(1-\sigma(x))\\
+\\
+\end{align*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section*
+2 Word2vec
+\end_layout
+
+\begin_layout Description
+(a) Note that 
+\begin_inset Formula $y$
+\end_inset
+
+ is an one-hot vector and therefore 
+\begin_inset Formula $\mathrm{CE}(y,\hat{y})$
+\end_inset
+
+ is dependant only in 
+\begin_inset Formula $\hat{y}_{o}=p(o|c)$
+\end_inset
+
+, so we get:
+\begin_inset Formula 
+\[
+\mathrm{CE}(y,\hat{y})=-\sum_{o}y_{o}\cdot\log(\hat{y}_{o})=-\log(\hat{y}_{o})=-u_{o}^{T}v_{c}+\log\left(\sum_{w=\text{1}}^{W}\exp(u_{w}^{T}v_{c})\right)
+\]
+
+\end_inset
+
+Now we derive:
+\begin_inset Formula 
+\begin{align*}
+\frac{\partial\mathrm{J_{softmaxCE}}}{\partial v_{c}} & =\frac{\partial\left[-u_{o}^{T}v_{c}+\log\left(\sum_{w=\text{1}}^{W}\exp(u_{w}^{T}v_{c})\right)\right]}{\partial v_{c}}\\
+ & =-u_{o}+\left(\sum_{w=1}^{W}\exp(u_{w}^{T}v_{c})\right)^{-1}\sum_{w=1}^{W}\exp(u_{w}^{T}v_{c})\cdot u_{w}\\
+ & =-u_{o}+\sum_{w=1}^{W}\underbrace{\frac{\exp(u_{w}^{T}v_{c})}{\sum_{j=1}^{W}\exp(u_{w}^{T}v_{c})}}_{=p(w|c)}\cdot u_{w}\\
+ & =-u_{o}+\sum_{w=1}^{W}p(w|c)\cdot u_{w}
+\end{align*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Description
+(b) As in (a):
+\begin_inset Formula 
+\begin{align*}
+\frac{\partial\mathrm{J_{softmaxCE}}}{\partial u_{o}} & =-v_{c}+\left(\sum_{w=1}^{W}\exp(u_{w}^{T}v_{c})\right)^{-1}\exp(u_{o}^{T}v_{c})\cdot v_{c}\\
+ & =-v_{c}+\underbrace{\frac{\exp(u_{o}^{T}v_{c})}{\sum_{j=1}^{W}\exp(u_{w}^{T}v_{c})}}_{=p(o|c)}\cdot v_{c}\\
+ & =-v_{c}\left(1-p(o|c)\right)
+\end{align*}
+
+\end_inset
+
+
+\begin_inset Formula 
+\begin{align*}
+\frac{\partial\mathrm{J_{softmaxCE}}}{\partial u_{w\neq o}} & =\left(\sum_{j=1}^{W}\exp(u_{j}^{T}v_{c})\right)^{-1}\exp(u_{w}^{T}v_{c})\cdot v_{c}\\
+ & =-v_{c}\cdot p(w|c)
+\end{align*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Description
+(c) Using 1(c) and the fact that:
+\begin_inset Formula 
+\begin{align*}
+\sigma(x)(1-\sigma(x)) & =\sigma(x)\left(\frac{1}{1-\sigma(x)}\right)^{-1}\\
+ & =\sigma(x)\left(1+\frac{\sigma(x)}{1-\sigma(x)}\right)^{-1}\\
+ & =\sigma(x)\left(1+e^{x}\right)^{-1}\\
+ & =\sigma(x)\sigma(-x)
+\end{align*}
+
+\end_inset
+
+
+\begin_inset Newline newline
+\end_inset
+
+we get:
+\begin_inset Formula 
+\begin{align*}
+\frac{\partial\mathrm{J_{negsample}}}{\partial v_{c}} & =\frac{\partial\left(-\log\sigma(u_{o}^{T}v_{c})-\sum_{k=1}^{K}\log\sigma(-u_{k}^{T}v_{c})\right)}{\partial v_{c}}\\
+ & =-\sigma^{-1}(u_{o}^{T}v_{c})\cdot\frac{\partial\sigma(u_{o}^{T}v_{c})}{\partial v_{c}}-\sum_{k=1}^{K}\sigma^{-1}(-u_{k}^{T}v_{c})\cdot\frac{\partial\sigma(-u_{k}^{T}v_{c})}{\partial v_{c}}\\
+ & =-\sigma^{-1}(u_{o}^{T}v_{c})\cdot\sigma(u_{o}^{T}v_{c})\cdot\sigma(-u_{o}^{T}v_{c})\cdot u_{o}\\
+ & -\sum_{k=1}^{K}\sigma^{-1}(-u_{k}^{T}v_{c})\cdot\sigma(-u_{k}^{T}v_{c})\cdot\sigma(u_{k}^{T}v_{c})\cdot(-u_{k})\\
+ & =-\sigma(-u_{o}^{T}v_{c})\cdot u_{o}+\sum_{k=1}^{K}\sigma(u_{k}^{T}v_{c})\cdot u_{k}\\
+\\
+\end{align*}
+
+\end_inset
+
+
+\begin_inset Formula 
+\begin{align*}
+\frac{\partial\mathrm{J_{negsample}}}{\partial u_{o}} & =\frac{\partial\left(-\log\sigma(u_{o}^{T}v_{c})-\sum_{k=1}^{K}\log\sigma(-u_{k}^{T}v_{c})\right)}{\partial u_{o}}\\
+ & =-\sigma^{-1}(u_{o}^{T}v_{c})\cdot\frac{\partial\sigma(u_{o}^{T}v_{c})}{\partial u_{o}}\\
+ & =\sigma^{-1}(u_{o}^{T}v_{c})\sigma(u_{o}^{T}v_{c})\sigma(-u_{o}^{T}v_{c})\cdot v_{c}\\
+ & =-\sigma(-u_{o}^{T}v_{c})\cdot v_{c}\\
+ & =-\left(1-\sigma(u_{o}^{T}v_{c})\right)\cdot v_{c}\\
+ & =\left(\sigma(u_{o}^{T}v_{c})-1\right)\cdot v_{c}
+\end{align*}
+
+\end_inset
+
+
+\begin_inset Formula 
+\begin{align*}
+\frac{\partial\mathrm{J_{negsample}}}{\partial u_{k(\neq o)}} & =\frac{\partial\left(-\log\sigma(u_{o}^{T}v_{c})-\sum_{k=1}^{K}\log\sigma(-u_{k}^{T}v_{c})\right)}{\partial u_{k}}\\
+ & =-\sigma^{-1}(-u_{k}^{T}v_{c})\cdot\frac{\partial\sigma(-u_{k}^{T}v_{c})}{\partial u_{k}}\\
+ & =-\sigma^{-1}(-u_{k}^{T}v_{c})\sigma(-u_{k}^{T}v_{c})\sigma(u_{k}^{T}v_{c})\cdot(-v_{c})\\
+ & =\sigma(u_{k}^{T}v_{c})\cdot v_{c}
+\end{align*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Description
+(d) Let 
+\begin_inset Formula $F\in\{\mathrm{J_{softmaxCE},J_{negsample}}\}$
+\end_inset
+
+ so we actually found the gradients in previous sections:
+\begin_inset Formula 
+\[
+\frac{\partial\mathrm{J_{skipgram}(}w_{c},v_{c})}{\partial U}=\sum_{-m\leq j\neq0\leq m}\frac{\partial F(w_{c+j},v_{c})}{\partial U}
+\]
+
+\end_inset
+
+
+\begin_inset Formula 
+\[
+\frac{\partial\mathrm{J_{skipgram}(}w_{c},v_{c})}{\partial v_{c}}=\sum_{-m\leq j\neq0\leq m}\frac{\partial F(w_{c+j},v_{c})}{\partial v_{c}}
+\]
+
+\end_inset
+
+
+\begin_inset Formula 
+\[
+\frac{\partial\mathrm{J_{skipgram}(}w_{c},v_{c})}{\partial v_{j\neq c}}=0
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Description
+(e) Below are the results of our test.
+\begin_inset Newline newline
+\end_inset
+
+Even though the graph in 2 dimensions is not very explanatory, We do note
+ that two very 
+\series bold
+similar
+\series default
+ words like 
+\begin_inset Quotes eld
+\end_inset
+
+amazing
+\begin_inset Quotes erd
+\end_inset
+
+ and 
+\begin_inset Quotes eld
+\end_inset
+
+wonderful
+\begin_inset Quotes erd
+\end_inset
+
+ are very close when measuring by the cosine similarity.
+ Moreover, the 
+\series bold
+article
+\series default
+ words such as 
+\begin_inset Quotes eld
+\end_inset
+
+a
+\begin_inset Quotes erd
+\end_inset
+
+, 
+\begin_inset Quotes eld
+\end_inset
+
+the
+\begin_inset Quotes erd
+\end_inset
+
+, 
+\begin_inset Quotes eld
+\end_inset
+
+an
+\begin_inset Quotes erd
+\end_inset
+
+ and signs like dot and comma appear relatively far from the 
+\end_layout
+
+\begin_layout Description
+\begin_inset Graphics
+	filename q3_word_vectors.png
+
+\end_inset
+
+
+\end_layout
+
+\end_body
+\end_document

@@ -292,5 +292,71 @@ we get:
 
 \end_layout
 
+\begin_layout Description
+(e) Below are the results of our test.
+ Even though the graph in 2 dimensions is not very explanatory, We do note
+ that two very 
+\series bold
+similar
+\series default
+ words like 
+\begin_inset Quotes eld
+\end_inset
+
+amazing
+\begin_inset Quotes erd
+\end_inset
+
+ and 
+\begin_inset Quotes eld
+\end_inset
+
+wonderful
+\begin_inset Quotes erd
+\end_inset
+
+ are very close when measuring by the cosine similarity.
+ Moreover, the 
+\series bold
+article
+\series default
+ words such as 
+\begin_inset Quotes eld
+\end_inset
+
+a
+\begin_inset Quotes erd
+\end_inset
+
+, 
+\begin_inset Quotes eld
+\end_inset
+
+the
+\begin_inset Quotes erd
+\end_inset
+
+, 
+\begin_inset Quotes eld
+\end_inset
+
+an
+\begin_inset Quotes erd
+\end_inset
+
+ and signs like dot and comma appear relatively far from the adjectives.
+ These observations give us a good hint about the job that was done in Word2Vec,
+ which is to represent words with an expressive low dimensional vector.
+\end_layout
+
+\begin_layout Description
+\begin_inset Graphics
+	filename q3_word_vectors.png
+
+\end_inset
+
+
+\end_layout
+
 \end_body
 \end_document
