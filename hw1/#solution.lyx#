@@ -294,10 +294,7 @@ we get:
 
 \begin_layout Description
 (e) Below are the results of our test.
-\begin_inset Newline newline
-\end_inset
-
-Even though the graph in 2 dimensions is not very explanatory, We do note
+ Even though the graph in 2 dimensions is not very explanatory, We do note
  that two very 
 \series bold
 similar
@@ -347,12 +344,55 @@ an
 \begin_inset Quotes erd
 \end_inset
 
- and signs like dot and comma appear relatively far from the 
+ and signs like dot and comma appear relatively far from the adjectives.
+ These observations give us a good hint about the job that was done in Word2Vec,
+ which is to represent words with an expressive low dimensional vector.
+\begin_inset Newline newline
+\end_inset
+
+
+\begin_inset Newline newline
+\end_inset
+
+
+\series bold
+List of related words
+\series default
+ (Nearest Neighbors):
+\begin_inset Newline newline
+\end_inset
+
+"the": ['the', 'if', 'that', 'comedy
+\backslash
+
+\backslash
+/thriller', 'or', 'a', '.', 'is', 'derek', 'bolt', 'decide']
+\begin_inset Newline newline
+\end_inset
+
+"unique": ['unique', '1979', 'puns', 'ba', 'realized', 'succumb', 'chabrolian',
+ 'dares', 'regardless', 'imaginative', 'lunar']
+\begin_inset Newline newline
+\end_inset
+
+"superb": ['superb', 'mine', 'gold', 'zingers', 'moppets', 'roussillon',
+ 'best', 'ghoulish', 'industry', 'pool', 'transporter'] 
+\begin_inset Newline newline
+\end_inset
+
+"comedy": ['comedy', 'sensation', 'observation', 'fast', 'first-timer',
+ 'singing', 'cleaving', 'longest', 'cute', 'mature', 'often-funny']
+\begin_inset Newline newline
+\end_inset
+
+"surprisingly": ['surprisingly', 'either', 'hundred', '20-car', 'philandering',
+ 'unusually', 'protective', 'dogs', 'bollywood', 'thinking', 'soderbergh']
 \end_layout
 
 \begin_layout Description
 \begin_inset Graphics
 	filename q3_word_vectors.png
+	scale 75
 
 \end_inset
 
