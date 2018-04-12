@@ -19,18 +19,34 @@ def gradcheck_naive(f, x):
     fx, grad = f(x) # Evaluate function value at original point
     h = 1e-4        # Do not change this!
 
-    # Iterate over all indexes in x
+    # Iterate over all indexes ix in x to check the gradient.
     it = np.nditer(x, flags=['multi_index'], op_flags=['readwrite'])
     while not it.finished:
         ix = it.multi_index
 
-        # Try modifying x[ix] with h defined above to compute
-        # numerical gradients. Make sure you call random.setstate(rndstate)
+        # Try modifying x[ix] with h defined above to compute numerical
+        # gradients (numgrad).
+
+        # Use the centered difference of the gradient.
+        # It has smaller asymptotic error than forward / backward difference
+        # methods. If you are curious, check out here:
+        # https://math.stackexchange.com/questions/2326181/when-to-use-forward-or-central-difference-approximations
+
+        # Make sure you call random.setstate(rndstate)
         # before calling f(x) each time. This will make it possible
         # to test cost functions with built in randomness later.
 
         ### YOUR CODE HERE:
-        raise NotImplementedError
+        eps = np.zeros(x.shape)
+        eps[ix] = h
+
+        random.setstate(rndstate)
+        fx_plus_eps = f(x + eps)[0]
+
+        random.setstate(rndstate)
+        fx_minus_eps = f(x - eps)[0]
+
+        numgrad = (fx_plus_eps - fx_minus_eps) / (2 * h)
         ### END YOUR CODE
 
         # Compare gradients
@@ -68,8 +84,16 @@ def your_sanity_checks():
     your additional tests be graded.
     """
     print "Running your sanity checks..."
-    ### YOUR CODE HERE
-    raise NotImplementedError
+    exp_sum = lambda x: (np.sum(np.exp(x)), np.exp(x))
+    gradcheck_naive(exp_sum, np.array(102.82))      # scalar test
+    gradcheck_naive(exp_sum, np.array([0, 0, 0, 0]))    # 1-D test
+    gradcheck_naive(exp_sum, np.array([[4, 5], [1, 1], [0, 0]]))   # 2-D test
+
+    zero_func = lambda x: (0, np.zeros(x.shape))
+    gradcheck_naive(zero_func, np.array(10233.32))      # scalar test
+    gradcheck_naive(zero_func, np.array([1, 0, 1, 0]))    # 1-D test
+    gradcheck_naive(zero_func, np.array([[4, 55], [1, 1], [0, 0]]))   # 2-D test
+
     ### END YOUR CODE
 
 
