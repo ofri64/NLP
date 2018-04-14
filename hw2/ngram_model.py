@@ -21,20 +21,22 @@ S_train = du.docs_to_indices(docs_train, word_to_num)
 docs_dev = du.load_dataset('data/lm/ptb-dev.txt')
 S_dev = du.docs_to_indices(docs_dev, word_to_num)
 
+def ngrams(sentence, n):
+    iters = itertools.tee(sentence, n)
+    forward = 0
+    for it in iters:
+        for _ in xrange(forward):
+            next(it, None)
+        forward += 1
+
+    return zip(*iters)
 
 def bigrams(sentence):
-    a, b = itertools.tee(sentence)
-    next(b, None)
-    return zip(a, b)
+    return ngrams(sentence, 2)
 
 
 def trigrams(sentence):
-    a, b, c = itertools.tee(sentence, 3)
-    next(c, None)
-    next(c, None)
-    next(b, None)
-    return zip(a, b, c)
-
+    return ngrams(sentence, 3)
 
 def train_ngrams(dataset):
     """
@@ -48,11 +50,11 @@ def train_ngrams(dataset):
 
     ### YOUR CODE HERE
     for sentence in dataset:
-        for unigram in sentence:
+        for unigram in sentence[2:]: # don't count <s> as part of the unigram distribution
             unigram_counts[unigram] = unigram_counts.get(unigram, 0) + 1
             token_count += 1
 
-        for bigram in bigrams(sentence):
+        for bigram in bigrams(sentence[1:]): # again, don't count <s>
             bigram_counts[bigram] = bigram_counts.get(bigram, 0) + 1
 
         for trigram in trigrams(sentence):
@@ -61,7 +63,6 @@ def train_ngrams(dataset):
 
     ### END YOUR CODE
     return trigram_counts, bigram_counts, unigram_counts, token_count
-
 
 def evaluate_ngrams(eval_dataset, trigram_counts, bigram_counts, unigram_counts, train_token_count, lambda1, lambda2):
     """
@@ -75,44 +76,36 @@ def evaluate_ngrams(eval_dataset, trigram_counts, bigram_counts, unigram_counts,
         bigram = trigram[:-1]
         if bigram not in bigram_counts:
             return 0
-        return float(trigram_counts.get(trigram, 0)) / bigram_counts[bigram]
+        return np.float128(trigram_counts.get(trigram, 0)) / bigram_counts[bigram]
 
     def bigram_probability(bigram):
         unigram = bigram[0]
         if unigram not in unigram_counts:
             return 0
-        return float(bigram_counts.get(bigram, 0)) / unigram_counts[unigram]
+        return np.float128(bigram_counts.get(bigram, 0)) / unigram_counts[unigram]
 
     def unigram_probability(unigram):
-        return float(unigram_counts.get(unigram, 0)) / train_token_count
+        return np.float128(unigram_counts.get(unigram, 0)) / train_token_count
 
     def linear_interpolation(trigram):
         lambda3 = 1 - lambda1 - lambda2
-        bigram = trigram[:-1]
-        unigram = trigram[0]
+        bigram = trigram[1:]
+        unigram = trigram[-1]
         return np.sum([
             lambda1 * trigram_probability(trigram),
             lambda2 * bigram_probability(bigram),
             lambda3 * unigram_probability(unigram)
         ])
 
-    text_log_like = 0
-    for sentence in eval_dataset:
-        sentence_prob = 1
+    def sentence_probability(s):
+        return np.prod([linear_interpolation(trigram) for trigram in trigrams(s)])
 
-        # compute p(si)
-        for trigram in trigrams(sentence):
-            q_li = linear_interpolation(trigram)
-            sentence_prob *= q_li
+    M = np.float128(np.sum([len(s) - 2 for s in eval_dataset]))
+    l = np.sum([np.log2(sentence_probability(sentence)) for sentence in eval_dataset]) / M
+    perplexity = np.power(2, -l)
 
-        # add log2(p(si)) to sum
-        text_log_like += np.log2(sentence_prob)
-
-    M = len(eval_dataset)
-    perplexity = np.power(2, -text_log_like / M)
     ### END YOUR CODE
     return perplexity
-
 
 def test_ngram():
     """
@@ -124,12 +117,8 @@ def test_ngram():
     print "#bigrams: " + str(len(bigram_counts))
     print "#unigrams: " + str(len(unigram_counts))
     print "#tokens: " + str(token_count)
-
-    print sorted(trigram_counts.items(), key=lambda x: x[1], reverse=True)[:100]
-
-
-    # perplexity = evaluate_ngrams(S_dev, trigram_counts, bigram_counts, unigram_counts, token_count, 0.5, 0.4)
-    # print "#perplexity: " + str(perplexity)
+    perplexity = evaluate_ngrams(S_dev, trigram_counts, bigram_counts, unigram_counts, token_count, 0.5, 0.4)
+    print "#perplexity: " + str(perplexity)
     ### YOUR CODE HERE
     ### END YOUR CODE
 
