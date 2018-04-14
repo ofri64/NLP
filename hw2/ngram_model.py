@@ -21,6 +21,7 @@ S_train = du.docs_to_indices(docs_train, word_to_num)
 docs_dev = du.load_dataset('data/lm/ptb-dev.txt')
 S_dev = du.docs_to_indices(docs_dev, word_to_num)
 
+
 def ngrams(sentence, n):
     iters = itertools.tee(sentence, n)
     forward = 0
@@ -31,12 +32,14 @@ def ngrams(sentence, n):
 
     return zip(*iters)
 
+
 def bigrams(sentence):
     return ngrams(sentence, 2)
 
 
 def trigrams(sentence):
     return ngrams(sentence, 3)
+
 
 def train_ngrams(dataset):
     """
@@ -50,19 +53,19 @@ def train_ngrams(dataset):
 
     ### YOUR CODE HERE
     for sentence in dataset:
-        for unigram in sentence[2:]: # don't count <s> as part of the unigram distribution
+        for unigram in sentence[2:]:  # don't count <s> as part of the unigram distribution
             unigram_counts[unigram] = unigram_counts.get(unigram, 0) + 1
             token_count += 1
 
-        for bigram in bigrams(sentence[1:]): # again, don't count <s>
+        for bigram in bigrams(sentence[1:]):  # again, don't count <s>
             bigram_counts[bigram] = bigram_counts.get(bigram, 0) + 1
 
         for trigram in trigrams(sentence):
             trigram_counts[trigram] = trigram_counts.get(trigram, 0) + 1
 
-
     ### END YOUR CODE
     return trigram_counts, bigram_counts, unigram_counts, token_count
+
 
 def evaluate_ngrams(eval_dataset, trigram_counts, bigram_counts, unigram_counts, train_token_count, lambda1, lambda2):
     """
@@ -70,6 +73,7 @@ def evaluate_ngrams(eval_dataset, trigram_counts, bigram_counts, unigram_counts,
     the current counts and a linear interpolation
     """
     perplexity = 0
+
     ### YOUR CODE HERE
 
     def trigram_probability(trigram):
@@ -107,6 +111,7 @@ def evaluate_ngrams(eval_dataset, trigram_counts, bigram_counts, unigram_counts,
     ### END YOUR CODE
     return perplexity
 
+
 def test_ngram():
     """
     Use this space to test your n-gram implementation.
@@ -120,7 +125,50 @@ def test_ngram():
     perplexity = evaluate_ngrams(S_dev, trigram_counts, bigram_counts, unigram_counts, token_count, 0.5, 0.4)
     print "#perplexity: " + str(perplexity)
     ### YOUR CODE HERE
-    ### END YOUR CODE
+
+    # Grid search lambda values
+    l1_left = l2_left = 0
+    l1_right = l2_right = 1
+    res = 0.1
+    epsilon = 0.3
+    step = 2.0
+
+    global_min_pair = (0, 0)
+    global_min_perp = np.inf
+
+    while True:
+        min_perp = global_min_perp
+        min_pair = global_min_pair
+        l1_grid = np.arange(l1_left, l1_right, res)
+        l2_grid = np.arange(l2_left, l2_right, res)
+        for l1 in l1_grid:
+            for l2 in l2_grid:
+                if l1 + l2 <= 1:
+                    perplexity = evaluate_ngrams(S_dev, trigram_counts, bigram_counts, unigram_counts, token_count, l1,
+                                                 l2)
+                    if perplexity < min_perp:
+                        min_perp = perplexity
+                        min_pair = (l1, l2)
+
+                        print "min perplexity is: " + str(min_perp)
+                        print "opt lambda values: " + str(min_pair)
+
+        if global_min_perp - min_perp < epsilon:
+            break
+
+        print "global min perplexity is: " + str(global_min_perp)
+        print "global opt lambda values: " + str(global_min_pair)
+        global_min_perp = min_perp
+        global_min_pair = min_pair
+
+        l1, l2 = min_pair
+        l1_left, l1_right = l1 - res, l1 + res
+        l2_left, l2_right = l2 - res, l2 + res
+        res /= step
+
+
+
+        ### END YOUR CODE
 
 
 if __name__ == "__main__":
