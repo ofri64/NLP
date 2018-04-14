@@ -29,8 +29,11 @@ def train_ngrams(dataset):
     bigram_counts = dict()
     unigram_counts = dict()
     token_count = 0
+
     ### YOUR CODE HERE
-    raise NotImplementedError
+
+    
+
     ### END YOUR CODE
     return trigram_counts, bigram_counts, unigram_counts, token_count
 
