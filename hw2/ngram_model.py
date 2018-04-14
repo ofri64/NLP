@@ -112,6 +112,51 @@ def evaluate_ngrams(eval_dataset, trigram_counts, bigram_counts, unigram_counts,
     return perplexity
 
 
+def grid_search_params(validation_set, trigram_counts, bigram_counts, unigram_counts, token_count,
+                       resolution, epsilon, step, left=0, right=1, verbose=False):
+    l1_left = l2_left = left
+    l1_right = l2_right = right
+
+    global_min_pair = (0, 0)
+    global_min_perp = np.inf
+
+    while True:
+        min_perp = global_min_perp
+        min_pair = global_min_pair
+        l1_grid = np.arange(l1_left, l1_right, resolution)
+        l2_grid = np.arange(l2_left, l2_right, resolution)
+        for l1 in l1_grid:
+            for l2 in l2_grid:
+                if l1 + l2 <= 1:
+                    perplexity = evaluate_ngrams(validation_set, trigram_counts, bigram_counts, unigram_counts, token_count, l1,
+                                                 l2)
+                    if perplexity < min_perp:
+                        min_perp = perplexity
+                        min_pair = (l1, l2)
+
+                        if verbose:
+                            print "min perplexity is: " + str(min_perp)
+                            print "opt lambda values: " + str(min_pair)
+
+        if global_min_perp - min_perp < epsilon:
+            global_min_perp = min_perp
+            global_min_pair = min_pair
+            return global_min_perp, global_min_pair
+
+        if verbose:
+            print "global min perplexity is: " + str(global_min_perp)
+            print "global opt lambda values: " + str(global_min_pair)
+
+        global_min_perp = min_perp
+        global_min_pair = min_pair
+
+        l1, l2 = min_pair
+        l1_left, l1_right = l1 - resolution, l1 + resolution
+        l2_left, l2_right = l2 - resolution, l2 + resolution
+        resolution /= step
+
+
+
 def test_ngram():
     """
     Use this space to test your n-gram implementation.
@@ -126,49 +171,9 @@ def test_ngram():
     print "#perplexity: " + str(perplexity)
     ### YOUR CODE HERE
 
-    # Grid search lambda values
-    l1_left = l2_left = 0
-    l1_right = l2_right = 1
-    res = 0.1
-    epsilon = 0.3
-    step = 2.0
-
-    global_min_pair = (0, 0)
-    global_min_perp = np.inf
-
-    while True:
-        min_perp = global_min_perp
-        min_pair = global_min_pair
-        l1_grid = np.arange(l1_left, l1_right, res)
-        l2_grid = np.arange(l2_left, l2_right, res)
-        for l1 in l1_grid:
-            for l2 in l2_grid:
-                if l1 + l2 <= 1:
-                    perplexity = evaluate_ngrams(S_dev, trigram_counts, bigram_counts, unigram_counts, token_count, l1,
-                                                 l2)
-                    if perplexity < min_perp:
-                        min_perp = perplexity
-                        min_pair = (l1, l2)
-
-                        print "min perplexity is: " + str(min_perp)
-                        print "opt lambda values: " + str(min_pair)
-
-        if global_min_perp - min_perp < epsilon:
-            break
-
-        print "global min perplexity is: " + str(global_min_perp)
-        print "global opt lambda values: " + str(global_min_pair)
-        global_min_perp = min_perp
-        global_min_pair = min_pair
-
-        l1, l2 = min_pair
-        l1_left, l1_right = l1 - res, l1 + res
-        l2_left, l2_right = l2 - res, l2 + res
-        res /= step
-
-
-
-        ### END YOUR CODE
+    grid_search_params(S_dev, trigram_counts, bigram_counts, unigram_counts, token_count,
+                       resolution=0.1, epsilon=0.3, step=2.0, verbose=True)
+    ### END YOUR CODE
 
 
 if __name__ == "__main__":
