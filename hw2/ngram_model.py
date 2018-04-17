@@ -95,17 +95,23 @@ def evaluate_ngrams(eval_dataset, trigram_counts, bigram_counts, unigram_counts,
         lambda3 = 1 - lambda1 - lambda2
         bigram = trigram[1:]
         unigram = trigram[-1]
-        return np.sum([
-            lambda1 * trigram_probability(trigram),
-            lambda2 * bigram_probability(bigram),
-            lambda3 * unigram_probability(unigram)
-        ])
+        return np.sum([lambda1 * trigram_probability(trigram),
+                       lambda2 * bigram_probability(bigram),
+                       lambda3 * unigram_probability(unigram)])
+
+    # q((x, y ,z)) is the (empirical) probability to see x given that the words before it was (y, z)
+    # in this case, q is a linear interpolation of unigram, bigram and trigram probablity models
+    q = linear_interpolation
 
     def sentence_probability(s):
-        return np.prod([linear_interpolation(trigram) for trigram in trigrams(s)])
+        return np.prod([q(trigram) for trigram in trigrams(s)])
 
+    # p(s) is the (empirical) probability to see a sentence s
+    p = sentence_probability
+
+    # len(s) - 2 because each sentence starts with two *
     M = np.float128(np.sum([len(s) - 2 for s in eval_dataset]))
-    l = np.sum([np.log2(sentence_probability(sentence)) for sentence in eval_dataset]) / M
+    l = np.sum([np.log2(p(s)) for s in eval_dataset]) / M
     perplexity = np.power(2, -l)
 
     ### END YOUR CODE
@@ -128,8 +134,8 @@ def grid_search_params(validation_set, trigram_counts, bigram_counts, unigram_co
         for l1 in l1_grid:
             for l2 in l2_grid:
                 if l1 + l2 <= 1:
-                    perplexity = evaluate_ngrams(validation_set, trigram_counts, bigram_counts, unigram_counts, token_count, l1,
-                                                 l2)
+                    perplexity = evaluate_ngrams(validation_set, trigram_counts, bigram_counts, unigram_counts,
+                                                 token_count, l1, l2)
                     if perplexity < min_perp:
                         min_perp = perplexity
                         min_pair = (l1, l2)
@@ -156,7 +162,6 @@ def grid_search_params(validation_set, trigram_counts, bigram_counts, unigram_co
         resolution /= step
 
 
-
 def test_ngram():
     """
     Use this space to test your n-gram implementation.
@@ -171,6 +176,7 @@ def test_ngram():
     print "#perplexity: " + str(perplexity)
     ### YOUR CODE HERE
 
+    print
     grid_search_params(S_dev, trigram_counts, bigram_counts, unigram_counts, token_count,
                        resolution=0.1, epsilon=0.3, step=2.0, verbose=True)
     ### END YOUR CODE
