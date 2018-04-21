@@ -75,7 +75,7 @@ ADVANCED METHODS IN NLP
 \begin_inset Newline newline
 \end_inset
 
-EXERCISE #x SOLUTION
+EXERCISE #2 SOLUTION
 \end_layout
 
 \begin_layout Author
@@ -98,6 +98,67 @@ Ido Calman [calman.ido@gmail.com] [308353499]
 \end_layout
 
 \begin_layout Section*
+Question 2
+\end_layout
+
+\begin_layout Description
+(a) 
+\begin_inset Formula 
+\begin{align*}
+\mathrm{softmax}(\theta)_{i} & =\frac{\exp(\theta_{i})}{\sum_{j}\exp(\theta_{j})}\\
+\mathrm{CE}(y,\hat{y}) & =-\sum y_{i}\log\hat{y}_{i}\underbrace{=}_{\textrm{y is one-hot vector}}-1\cdot\log(\hat{y}_{i})\\
+ & =-\log\left(\frac{\exp(\theta_{i})}{\sum_{j}\exp(\theta_{j})}\right)\\
+ & =-\theta_{i}+\log\left(\sum_{j}\exp(\theta_{j})\right)\\
+\left(\frac{\partial\mathrm{CE}(y,\hat{y})}{\partial\theta}\right)_{j} & =\frac{\partial\mathrm{CE}(y,\hat{y})}{\partial\theta_{j}}\\
+\end{align*}
+
+\end_inset
+
+Scalar-wise:
+\begin_inset Formula 
+\begin{align*}
+\frac{\partial\mathrm{CE}(y,\hat{y})}{\partial\theta_{j\neq i}} & =\frac{1\cdot\exp(\theta_{j})}{\sum_{k}\exp(\theta_{k})}\\
+\frac{\partial\mathrm{CE}(y,\hat{y})}{\partial\theta_{i}} & =-1+\frac{1\cdot\exp(\theta_{i})}{\sum_{k}\exp(\theta_{k})}
+\end{align*}
+
+\end_inset
+
+Therefore, by deriving vector-wise we get:
+\begin_inset Formula 
+\begin{align*}
+\\
+\frac{\partial\mathrm{CE}(y,\hat{y})}{\partial\theta} & =\hat{y}-y
+\end{align*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Description
+(b) 
+\begin_inset Formula 
+\begin{align*}
+J & =\mathrm{CE}(y,\hat{y})\\
+\theta & =hW_{2}+b_{2}\\
+h & =\sigma(xW_{1}+b_{1})\\
+\frac{\partial J}{\partial\theta} & \underbrace{=}_{\textrm{section a}}\hat{y}-y\\
+\frac{\partial\theta}{\partial h} & =W_{2}\\
+\frac{\partial h}{\partial x} & =\sigma'(xW_{1}+b_{1})\cdot W_{1}\\
+\\
+\end{align*}
+
+\end_inset
+
+Now, by applying the chain rule we get:
+\begin_inset Formula 
+\begin{align*}
+\frac{\partial J}{\partial x} & =\frac{\partial J}{\partial\theta}\cdot\frac{\partial\theta}{\partial h}\cdot\frac{\partial h}{\partial x}\\
+ & =(\hat{y}-y)W_{2}^{T}\sigma'(xW_{1}+b_{1})\cdot W_{1}^{T}
+\end{align*}
+
+\end_inset
+
 
 \end_layout
 
