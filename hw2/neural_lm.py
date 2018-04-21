@@ -83,13 +83,19 @@ def lm_wrapper(in_word_index, out_word_index, num_to_word_embedding, dimensions,
     in_word_index, out_word_index = shuffle_training_data(in_word_index, out_word_index)
     in_word_index, out_word_index = in_word_index[:BATCH_SIZE], out_word_index[:BATCH_SIZE]
 
-    for i, in_word in enumerate(num_to_word_embedding[in_word_index]):
-        data[i], labels[i] = in_word, int_to_one_hot(out_word_index[i], output_dim)
+    # need to convert the arrays to numpy arrays to apply the numpy syntax below
+    num_to_word_embedding = np.array(num_to_word_embedding)
+    in_word_index = np.array(in_word_index)
+
+    for i, in_word_emb in enumerate(num_to_word_embedding[in_word_index]):
+        data[i], labels[i] = in_word_emb, int_to_one_hot(out_word_index[i], output_dim)
 
     assert data.shape == (BATCH_SIZE, input_dim)
     assert labels.shape == (BATCH_SIZE, output_dim)
 
     cost, grad = forward_backward_prop(data, labels, params, dimensions)
+    print "finished a batch!"
+
     ### END YOUR CODE
 
     cost /= BATCH_SIZE
@@ -108,6 +114,18 @@ def eval_neural_lm(eval_data_path):
 
     perplexity = 0
     ### YOUR CODE HERE
+
+    s = 0
+
+    for i, in_word in enumerate(in_word_index):
+        word_embedding = num_to_word_embedding[in_word]
+        out_word_prob = forward(word_embedding, out_word_index[i], params, dimensions)
+
+        s += np.log2(out_word_prob)
+
+    l = s / num_of_examples
+    perplexity = np.power(2, -l)
+
     ### END YOUR CODE
 
     return perplexity
