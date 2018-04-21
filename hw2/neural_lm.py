@@ -30,7 +30,7 @@ def load_vocab_embeddings(path=VOCAB_EMBEDDING_PATH):
 
 def load_data_as_sentences(path, word_to_num):
     """
-    Conv:erts the training data to an array of integer arrays.
+    Converts the training data to an array of integer arrays.
       args: 
         path: string pointing to the training data
         word_to_num: A dictionary from string words to integers

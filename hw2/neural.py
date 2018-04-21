@@ -28,7 +28,14 @@ def forward(data, label, params, dimensions):
 
     # Compute the probability
     ### YOUR CODE HERE: forward propagation
-    raise NotImplementedError
+
+    z1 = np.dot(data, W1) + b1
+    h = sigmoid(z1)
+    z2 = np.dot(h, W2) + b2
+    y_hat = softmax(z2)
+
+    return y_hat[label]
+
     ### END YOUR CODE
 
 def forward_backward_prop(data, labels, params, dimensions):
@@ -59,11 +66,28 @@ def forward_backward_prop(data, labels, params, dimensions):
     b2 = np.reshape(params[ofs:ofs + Dy], (1, Dy))
 
     ### YOUR CODE HERE: forward propagation
-    raise NotImplementedError
+
+    z1 = np.dot(data, W1) + b1 # z is an M x H matrix, row for each batch sample
+    h = sigmoid(z1) # h is also an M x H matrix, apply sigmoid on each matrix element
+    z2 = np.dot(h, W2) + b2 # z2 is an M x Dy matrix
+    y_hat = softmax(z2) # y_pred is also an M x Dy matrix
+
     ### END YOUR CODE
 
     ### YOUR CODE HERE: backward propagation
-    raise NotImplementedError
+
+    cost_vector = -np.log(np.sum(y_hat * labels, axis=1))
+    cost = np.sum(cost_vector)
+
+    delta_2 = y_hat - labels # an M x Dy matrix
+    delta_1 = np.dot(delta_2, W2.transpose()) * sigmoid_grad(z1) # an M x H matrix
+
+    gradb1 = np.sum(delta_1, axis=0) # 1 x H vector
+    gradb2 = np.sum(delta_2, axis=0) # 1 X Dy vector
+
+    gradW1 = np.tensordot(data.transpose(), delta_1, axes=1)
+    gradW2 = np.tensordot(h.transpose(), delta_2, axes=1)
+    
     ### END YOUR CODE
 
     ### Stack gradients (do not modify)
@@ -103,7 +127,32 @@ def your_sanity_checks():
     """
     print "Running your sanity checks..."
     ### YOUR CODE HERE
-    raise NotImplementedError
+    N = 5
+    dimensions = [5, 2, 5]
+    data = np.array([
+        [1, 2, 1, 3, 1],
+        [1, 2, 1, 1, 0],
+        [0, 1, 1, 0, 1],
+        [-1, 0, -1, 1, 1],
+        [0, 0, -1, 1, 0]
+    ])
+
+    labels = np.array([
+        [0, 1, 0, 0, 0],
+        [0, 0, 1, 0, 0],
+        [1, 0, 0, 0, 0],
+        [1, 0, 0, 0, 0],
+        [0, 1, 0, 0, 0],
+
+    ])
+
+    W1 = np.array([[1, 0], [0, 1], [1, 0], [0, 1], [0, 0]])
+    b1 = np.array([[0, 1]])
+    W2 = np.array([[1, 2, 1, 1, 1], [0, 1, 2, 1, 0]])
+    b2 = np.array([[0, 1, 1, 0, 0]])
+
+    params = np.concatenate([W1.flatten(), b1.flatten(), W2.flatten(), b2.flatten()])
+    gradcheck_naive(lambda params: forward_backward_prop(data, labels, params, dimensions), params)
     ### END YOUR CODE
 
 
