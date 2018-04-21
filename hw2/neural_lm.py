@@ -75,27 +75,16 @@ def int_to_one_hot(number, dim):
 
 
 def lm_wrapper(in_word_index, out_word_index, num_to_word_embedding, dimensions, params):
-    data = np.zeros([BATCH_SIZE, input_dim])
+    # data = np.zeros([BATCH_SIZE, input_dim])
     labels = np.zeros([BATCH_SIZE, output_dim])
 
     # Construct the data batch and run you backpropogation implementation
     ### YOUR CODE HERE
-    in_word_index, out_word_index = shuffle_training_data(in_word_index, out_word_index)
-    in_word_index, out_word_index = in_word_index[:BATCH_SIZE], out_word_index[:BATCH_SIZE]
-
-    # need to convert the arrays to numpy arrays to apply the numpy syntax below
-    num_to_word_embedding = np.array(num_to_word_embedding)
-    in_word_index = np.array(in_word_index)
-
-    for i, in_word_emb in enumerate(num_to_word_embedding[in_word_index]):
-        data[i], labels[i] = in_word_emb, int_to_one_hot(out_word_index[i], output_dim)
-
-    assert data.shape == (BATCH_SIZE, input_dim)
-    assert labels.shape == (BATCH_SIZE, output_dim)
+    batch_indices = np.random.choice(len(in_word_index), BATCH_SIZE)
+    data = np.array(num_to_word_embedding)[np.array(in_word_index)[batch_indices]]
+    labels[np.arange(BATCH_SIZE), np.array(out_word_index)[batch_indices]] = 1.0
 
     cost, grad = forward_backward_prop(data, labels, params, dimensions)
-    print "finished a batch!"
-
     ### END YOUR CODE
 
     cost /= BATCH_SIZE
@@ -167,7 +156,7 @@ if __name__ == "__main__":
     # run SGD
     params = sgd(
         lambda vec: lm_wrapper(in_word_index, out_word_index, num_to_word_embedding, dimensions, vec),
-        params, LEARNING_RATE, NUM_OF_SGD_ITERATIONS, None, True, 1000)
+        params, LEARNING_RATE, NUM_OF_SGD_ITERATIONS, None, True, 10)
 
     print "training took %d seconds" % (time.time() - startTime)
 
