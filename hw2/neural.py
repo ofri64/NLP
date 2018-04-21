@@ -7,6 +7,7 @@ from softmax import softmax
 from sigmoid import sigmoid, sigmoid_grad
 from gradcheck import gradcheck_naive
 
+
 def forward(data, label, params, dimensions):
     """
     runs a forward pass and returns the probability of the correct word for eval.
@@ -17,7 +18,7 @@ def forward(data, label, params, dimensions):
     ofs = 0
     Dx, H, Dy = (dimensions[0], dimensions[1], dimensions[2])
 
-    W1 = np.reshape(params[ofs:ofs+ Dx * H], (Dx, H))
+    W1 = np.reshape(params[ofs:ofs + Dx * H], (Dx, H))
     ofs += Dx * H
     b1 = np.reshape(params[ofs:ofs + H], (1, H))
     ofs += H
@@ -36,6 +37,7 @@ def forward(data, label, params, dimensions):
     return y_hat[label]
 
     ### END YOUR CODE
+
 
 def forward_backward_prop(data, labels, params, dimensions):
     """
@@ -56,7 +58,7 @@ def forward_backward_prop(data, labels, params, dimensions):
     ofs = 0
     Dx, H, Dy = (dimensions[0], dimensions[1], dimensions[2])
 
-    W1 = np.reshape(params[ofs:ofs+ Dx * H], (Dx, H))
+    W1 = np.reshape(params[ofs:ofs + Dx * H], (Dx, H))
     ofs += Dx * H
     b1 = np.reshape(params[ofs:ofs + H], (1, H))
     ofs += H
@@ -66,10 +68,10 @@ def forward_backward_prop(data, labels, params, dimensions):
 
     ### YOUR CODE HERE: forward propagation
 
-    z1 = np.dot(data, W1) + b1 # z is an M x H matrix, row for each batch sample
-    h = sigmoid(z1) # h is also an M x H matrix, apply sigmoid on each matrix element
-    z2 = np.dot(h, W2) + b2 # z2 is an M x Dy matrix
-    y_hat = softmax(z2) # y_pred is also an M x Dy matrix
+    z1 = np.dot(data, W1) + b1  # z is an M x H matrix, row for each batch sample
+    h = sigmoid(z1)  # h is also an M x H matrix, apply sigmoid on each matrix element
+    z2 = np.dot(h, W2) + b2  # z2 is an M x Dy matrix
+    y_hat = softmax(z2)  # y_pred is also an M x Dy matrix
 
     ### END YOUR CODE
 
@@ -77,20 +79,20 @@ def forward_backward_prop(data, labels, params, dimensions):
 
     cost = -np.sum(labels * np.log(y_hat))
 
-    delta_2 = y_hat - labels # an M x Dy matrix
-    delta_1 = np.dot(delta_2, W2.transpose()) * sigmoid_grad(h) # an M x H matrix
+    delta_2 = y_hat - labels  # an M x Dy matrix
+    delta_1 = np.dot(delta_2, W2.T) * sigmoid_grad(h)  # an M x H matrix
 
-    gradb1 = np.sum(delta_1, axis=0) # 1 x H vector
-    gradb2 = np.sum(delta_2, axis=0) # 1 X Dy vector
+    gradb1 = np.sum(delta_1, axis=0)  # 1 x H vector
+    gradb2 = np.sum(delta_2, axis=0)  # 1 X Dy vector
 
-    gradW1 = np.dot(data.T, delta_1) # Dx x H matrix
-    gradW2 = np.dot(h.T, delta_2) # H x M matrix
+    gradW1 = np.dot(data.T, delta_1)  # Dx x H matrix
+    gradW2 = np.dot(h.T, delta_2)  # H x M matrix
 
     ### END YOUR CODE
 
     ### Stack gradients (do not modify)
     grad = np.concatenate((gradW1.flatten(), gradb1.flatten(),
-        gradW2.flatten(), gradb2.flatten()))
+                           gradW2.flatten(), gradb2.flatten()))
 
     return cost, grad
 
@@ -104,16 +106,16 @@ def sanity_check():
 
     N = 20
     dimensions = [10, 5, 10]
-    data = np.random.randn(N, dimensions[0])   # each row will be a datum
+    data = np.random.randn(N, dimensions[0])  # each row will be a datum
     labels = np.zeros((N, dimensions[2]))
     for i in xrange(N):
-        labels[i, random.randint(0,dimensions[2]-1)] = 1
+        labels[i, random.randint(0, dimensions[2] - 1)] = 1
 
     params = np.random.randn((dimensions[0] + 1) * dimensions[1] + (
-        dimensions[1] + 1) * dimensions[2], )
+            dimensions[1] + 1) * dimensions[2], )
 
     gradcheck_naive(lambda params:
-        forward_backward_prop(data, labels, params, dimensions), params)
+                    forward_backward_prop(data, labels, params, dimensions), params)
 
 
 def your_sanity_checks():
