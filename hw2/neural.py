@@ -17,7 +17,6 @@ def forward(data, label, params, dimensions):
     ofs = 0
     Dx, H, Dy = (dimensions[0], dimensions[1], dimensions[2])
 
-    params[ofs:ofs+ Dx * H]
     W1 = np.reshape(params[ofs:ofs+ Dx * H], (Dx, H))
     ofs += Dx * H
     b1 = np.reshape(params[ofs:ofs + H], (1, H))
@@ -76,18 +75,17 @@ def forward_backward_prop(data, labels, params, dimensions):
 
     ### YOUR CODE HERE: backward propagation
 
-    cost_vector = -np.log(np.sum(y_hat * labels, axis=1))
-    cost = np.sum(cost_vector)
+    cost = -np.sum(labels * np.log(y_hat))
 
     delta_2 = y_hat - labels # an M x Dy matrix
-    delta_1 = np.dot(delta_2, W2.transpose()) * sigmoid_grad(z1) # an M x H matrix
+    delta_1 = np.dot(delta_2, W2.transpose()) * sigmoid_grad(h) # an M x H matrix
 
     gradb1 = np.sum(delta_1, axis=0) # 1 x H vector
     gradb2 = np.sum(delta_2, axis=0) # 1 X Dy vector
 
-    gradW1 = np.tensordot(data.transpose(), delta_1, axes=1)
-    gradW2 = np.tensordot(h.transpose(), delta_2, axes=1)
-    
+    gradW1 = np.dot(data.T, delta_1) # Dx x H matrix
+    gradW2 = np.dot(h.T, delta_2) # H x M matrix
+
     ### END YOUR CODE
 
     ### Stack gradients (do not modify)
