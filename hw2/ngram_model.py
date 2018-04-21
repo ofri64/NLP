@@ -154,8 +154,8 @@ def grid_search_params(validation_set, trigram_counts, bigram_counts, unigram_co
                         min_perp = perplexity
                         min_pair = (l1, l2)
 
-                        if verbose:
-                            print 'perplexity = {0}; 𝝀1 = {1}, 𝝀2 = {2}'.format(min_perp, l1, l2)
+                    if verbose:
+                        print 'perplexity = {0}; 𝝀1 = {1}, 𝝀2 = {2}'.format(perplexity, l1, l2)
 
             l1d[l1] = l2d
 
@@ -198,6 +198,7 @@ def test_ngram():
                                             resolution=0.1, epsilon=1.0, step=2.0, verbose=True)
 
     print pd.DataFrame(df)
+    print "best params are: perplexity = {0}; 𝝀1 = {1}, 𝝀2 = {2}".format(perp, l1, l2)
 
     ### END YOUR CODE
 
