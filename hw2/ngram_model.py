@@ -1,4 +1,5 @@
 #!/usr/local/bin/python
+# -*- coding: utf-8 -*-
 
 from data_utils import utils as du
 import numpy as np
@@ -23,6 +24,9 @@ S_dev = du.docs_to_indices(docs_dev, word_to_num)
 
 
 def ngrams(sentence, n):
+    if n == 1:
+        return sentence[1:]
+
     iters = itertools.tee(sentence, n)
     forward = 0
     for it in iters:
@@ -31,6 +35,17 @@ def ngrams(sentence, n):
         forward += 1
 
     return zip(*iters)
+
+
+# n_asterisks is the number of asterisks in the beginning of each sentence in the dataset
+def count_ngrams(dataset, n):
+    ngram_counts = {}
+
+    for sentence in dataset:
+        for ngram in ngrams(sentence, n):
+            ngram_counts[ngram] = ngram_counts.get(ngram, 0) + 1
+
+    return ngram_counts
 
 
 def bigrams(sentence):
@@ -52,16 +67,11 @@ def train_ngrams(dataset):
     token_count = 0
 
     ### YOUR CODE HERE
-    for sentence in dataset:
-        for unigram in sentence[2:]:  # don't count <s> as part of the unigram distribution
-            unigram_counts[unigram] = unigram_counts.get(unigram, 0) + 1
-            token_count += 1
 
-        for bigram in bigrams(sentence[1:]):  # again, don't count <s>
-            bigram_counts[bigram] = bigram_counts.get(bigram, 0) + 1
-
-        for trigram in trigrams(sentence):
-            trigram_counts[trigram] = trigram_counts.get(trigram, 0) + 1
+    trigram_counts = count_ngrams(dataset, 3)
+    bigram_counts = count_ngrams(dataset, 2)
+    unigram_counts = count_ngrams(dataset, 1)
+    token_count = np.sum([len(s) - 2 for s in dataset])
 
     ### END YOUR CODE
     return trigram_counts, bigram_counts, unigram_counts, token_count
@@ -126,35 +136,40 @@ def grid_search_params(validation_set, trigram_counts, bigram_counts, unigram_co
     global_min_pair = (0, 0)
     global_min_perp = np.inf
 
+    l1d, l2d = {}, {}
+
     while True:
         min_perp = global_min_perp
         min_pair = global_min_pair
         l1_grid = np.arange(l1_left, l1_right, resolution)
         l2_grid = np.arange(l2_left, l2_right, resolution)
         for l1 in l1_grid:
+            l2d = {}
             for l2 in l2_grid:
                 if l1 + l2 <= 1:
-                    perplexity = evaluate_ngrams(validation_set, trigram_counts, bigram_counts, unigram_counts,
-                                                 token_count, l1, l2)
+                    l2d[l2] = perplexity = evaluate_ngrams(validation_set, trigram_counts, bigram_counts,
+                                                           unigram_counts,
+                                                           token_count, l1, l2)
                     if perplexity < min_perp:
                         min_perp = perplexity
                         min_pair = (l1, l2)
 
                         if verbose:
-                            print "min perplexity is: " + str(min_perp)
-                            print "opt lambda values: " + str(min_pair)
+                            print 'perplexity = {0}; 𝝀1 = {1}, 𝝀2 = {2}'.format(min_perp, l1, l2)
+
+            l1d[l1] = l2d
 
         if global_min_perp - min_perp < epsilon:
             global_min_perp = min_perp
             global_min_pair = min_pair
-            return global_min_perp, global_min_pair
-
-        if verbose:
-            print "global min perplexity is: " + str(global_min_perp)
-            print "global opt lambda values: " + str(global_min_pair)
+            return global_min_perp, global_min_pair, l1d
 
         global_min_perp = min_perp
         global_min_pair = min_pair
+
+        # if verbose:
+        #     print "global min perplexity is: " + str(global_min_perp)
+        #     print "global opt lambda values: " + str(global_min_pair)
 
         l1, l2 = min_pair
         l1_left, l1_right = l1 - resolution, l1 + resolution
@@ -177,8 +192,13 @@ def test_ngram():
     ### YOUR CODE HERE
 
     print
-    grid_search_params(S_dev, trigram_counts, bigram_counts, unigram_counts, token_count,
-                       resolution=0.1, epsilon=0.3, step=2.0, verbose=True)
+
+    perp, (l1, l2), df = grid_search_params(S_dev, trigram_counts, bigram_counts, unigram_counts,
+                                            token_count,
+                                            resolution=0.1, epsilon=1.0, step=2.0, verbose=True)
+
+    print pd.DataFrame(df)
+
     ### END YOUR CODE
 
 
