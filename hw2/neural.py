@@ -34,7 +34,7 @@ def forward(data, label, params, dimensions):
     z2 = np.dot(h, W2) + b2
     y_hat = softmax(z2)
 
-    return y_hat[label]
+    return y_hat[0, label]
 
     ### END YOUR CODE
 
