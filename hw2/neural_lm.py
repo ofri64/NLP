@@ -81,8 +81,16 @@ def lm_wrapper(in_word_index, out_word_index, num_to_word_embedding, dimensions,
     # Construct the data batch and run you backpropogation implementation
     ### YOUR CODE HERE
     batch_indices = np.random.choice(len(in_word_index), BATCH_SIZE)
-    data = np.array(num_to_word_embedding)[np.array(in_word_index)[batch_indices]]
-    labels[np.arange(BATCH_SIZE), np.array(out_word_index)[batch_indices]] = 1.0
+
+    # data = np.array(num_to_word_embedding)[np.array(in_word_index)[batch_indices]]
+    # labels[np.arange(BATCH_SIZE), np.array(out_word_index)[batch_indices]] = 1.0
+
+    data = num_to_word_embedding[in_word_index[batch_indices]]
+    labels[np.arange(BATCH_SIZE), out_word_index[batch_indices]] = 1.0
+
+    # for i, batch_ind in enumerate(batch_indices):
+    #     data[i, :] = num_to_word_embedding[in_word_index[batch_ind]]
+    #     labels[i, :] = int_to_one_hot(out_word_index[batch_ind], dimensions[2])
 
     cost, grad = forward_backward_prop(data, labels, params, dimensions)
     ### END YOUR CODE
@@ -104,15 +112,20 @@ def eval_neural_lm(eval_data_path):
     perplexity = 0
     ### YOUR CODE HERE
 
-    s = 0
+    # s = 0
+    #
+    # for i, in_word in enumerate(in_word_index):
+    #     word_embedding = num_to_word_embedding[in_word]
+    #     out_word_prob = forward(word_embedding, out_word_index[i], params, dimensions)
+    #
+    #     s += np.log2(out_word_prob)
+    #
+    # l = s / num_of_examples
 
-    for i, in_word in enumerate(in_word_index):
-        word_embedding = num_to_word_embedding[in_word]
-        out_word_prob = forward(word_embedding, out_word_index[i], params, dimensions)
+    l = np.sum(
+        [np.log2(forward(num_to_word_embedding[in_word], out_word_index[i], params, dimensions)) for i, in_word in
+         enumerate(in_word_index)]) / np.float128(num_of_examples)
 
-        s += np.log2(out_word_prob)
-
-    l = s / num_of_examples
     perplexity = np.power(2, -l)
 
     ### END YOUR CODE
@@ -154,6 +167,11 @@ if __name__ == "__main__":
     print "#train examples: " + str(num_of_examples)
 
     # run SGD
+
+    num_to_word_embedding = np.array(num_to_word_embedding)
+    in_word_index = np.array(in_word_index)
+    out_word_index = np.array(out_word_index)
+
     params = sgd(
         lambda vec: lm_wrapper(in_word_index, out_word_index, num_to_word_embedding, dimensions, vec),
         params, LEARNING_RATE, NUM_OF_SGD_ITERATIONS, None, True, 1000)
