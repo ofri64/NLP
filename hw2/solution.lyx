@@ -1372,7 +1372,15 @@ Now, by applying the chain rule we get:
 
 \end_inset
 
+where 
+\begin_inset Formula $\sigma'(xW_{1}+b_{1})=\sigma(xW_{1}+b_{1})\circ(\left(1-\sigma(xW_{1}+b_{1})\right).$
+\end_inset
 
+ Note that the multiplication should be performed element-wise, since 
+\begin_inset Formula $xW_{1}+b_{1}$
+\end_inset
+
+ is a vector.
 \end_layout
 
 \begin_layout Description
