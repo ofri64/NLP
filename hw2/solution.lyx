@@ -1280,7 +1280,7 @@ lambda_1 $
 \begin_inset Newline newline
 \end_inset
 
-When narrowing down to resolution = 0.5 our run meets the halting condition
+When narrowing down to resolution = 0.05 our run meets the halting condition
  at: 
 \begin_inset ERT
 status open
@@ -1291,16 +1291,16 @@ $
 \backslash
 lambda_1 = 0.35 , 
 \backslash
-lambda_2 = 0.45 , 
+lambda_2 = 0.5 , 
 \backslash
-lambda_3 =  0.1  $
+lambda_3 =  0.15  $
 \end_layout
 
 \end_inset
 
  with 
 \series bold
-perplexity = 51.2
+perplexity = 50.86
 \end_layout
 
 \begin_layout Section*
@@ -1377,6 +1377,28 @@ Now, by applying the chain rule we get:
 
 \begin_layout Description
 (d) Results:
+\begin_inset Newline newline
+\end_inset
+
+#params: 104550
+\series bold
+ 
+\series default
+
+\begin_inset Newline newline
+\end_inset
+
+#train examples: 1118296
+\series bold
+ 
+\series default
+
+\begin_inset Newline newline
+\end_inset
+
+dev perplexity : 
+\series bold
+112.967665327
 \end_layout
 
 \end_body
