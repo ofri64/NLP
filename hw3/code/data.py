@@ -1,10 +1,14 @@
 import os
+
 MIN_FREQ = 3
+
+
 def invert_dict(d):
     res = {}
     for k, v in d.iteritems():
         res[v] = k
     return res
+
 
 def read_conll_pos_file(path):
     """
@@ -20,8 +24,9 @@ def read_conll_pos_file(path):
                 curr = []
             else:
                 tokens = line.strip().split("\t")
-                curr.append((tokens[1],tokens[3]))
+                curr.append((tokens[1], tokens[3]))
     return sents
+
 
 def increment_count(count_dict, key):
     """
@@ -35,6 +40,7 @@ def increment_count(count_dict, key):
     else:
         count_dict[key] = 1
 
+
 def compute_vocab_count(sents):
     """
         Takes a corpus and computes all words and the number of times they appear
@@ -45,43 +51,42 @@ def compute_vocab_count(sents):
             increment_count(vocab, token[0])
     return vocab
 
+
 def replace_word(word):
     """
         Replaces rare words with categories (numbers, dates, etc...)
     """
     ### YOUR CODE HERE
+    import re
 
-    if len(word) == 2 and word.isdigit() and word[0] != "0":
-        return "twoDigitNum"
-    if len(word) == 4 and word.isdigit() and word[0] != "0":
-        return "fourDigitNum"
-    if "-" in word and word.replace("-", "0").isalnum():
-        return "containsDigitAndAlpha"
-    if "-" in word and word.replace("-", "0").isdigit():
-        return "containsDigitAndDash"
-    if "/" in word and word.replace("/", "0").isdigit():
-        return "containsDigitAndSlash"
-    if "," in word and "." in word and word.replace(",", "0").replace(".", "0").isdigit():
-        return "containsDigitAndComma"
-    if "," in word and word.replace(",", "0").isdigit():
-        return "containsDigitAndPeriod"
-    if "%" in word and word.replace("%", "0").isdigit():
-        return "percents"
-    if word.isdigit():
-        return "otherNum"
-    if word.isupper():
-        return "allCaps"
-    if word[0].isupper() and "." in word and word.replace(".", "a").isalpha():
-        return "capsPeriod"
-    if word[0].isupper() and word[1:].islower() and word.isalpha():
-        return "initCap"
-    if word.islower() and word.isalpha():
-        return "lowerCase"
-    if word in [",", ".", ";", "?", "!", ":", ";", "-"]:
-        return "puncMark"
+    def contains_digit_and_char(w, ch):
+        return bool(re.search('\d', w)) and ch in word
+
+    categories = {
+        'twoDigitNum': lambda w: len(w) == 2 and w.isdigit() and w[0] != '0',
+        'fourDigitNum': lambda w: len(w) == 4 and w.isdigit() and w[0] != '0',
+        'containsDigitAndAlpha': lambda w: bool(re.search('\d', w)) and bool(re.search('[a-zA-Z_]', w)),
+        'containsDigitAndDash': lambda w: contains_digit_and_char(w, '-'),
+        'containsDigitAndSlash': lambda w: contains_digit_and_char(w, '/'),
+        'containsDigitAndComma': lambda w: contains_digit_and_char(w, ','),
+        'containsDigitAndPeriod': lambda w: contains_digit_and_char(w, '.'),
+        'otherNum': lambda w: w.isdigit(),
+        'allCaps': lambda w: w.isupper(),
+        'capPeriod': lambda w: len(w) == 2 and w[1] == '.' and w[0].isupper(),
+        'initCap': lambda w: len(w) > 1 and w[0].isupper(),
+        'lowerCase': lambda w: w.islower(),
+        'punkMark': lambda w: word in (",", ".", ";", "?", "!", ":", ";", "-", '&'),
+        'containsNonAlphaNumeric': lambda w: bool(re.search('\W', w)),
+        'percent': lambda w: len(w) > 1 and w[0] == '%' and w[1:].isdigit()
+    }
+
+    for cat, cond in categories.iteritems():
+        if cond(word):
+            return cat
 
     ### END YOUR CODE
     return "UNK"
+
 
 def preprocess_sent(vocab, sents):
     """
@@ -99,12 +104,5 @@ def preprocess_sent(vocab, sents):
                 replaced += 1
             total += 1
         res.append(new_sent)
-    print "replaced: " + str(float(replaced)/total)
+    print "replaced: " + str(float(replaced) / total)
     return res
-
-
-
-
-
-
-
