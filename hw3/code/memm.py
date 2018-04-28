@@ -76,7 +76,11 @@ def memm_greeedy(sent, logreg, vec, index_to_tag_dict):
     """
     predicted_tags = [""] * (len(sent))
     ### YOUR CODE HERE
-    raise NotImplementedError
+    for i in xrange(len(sent)):
+        features = extract_features(sent, i)
+        vectorized_features = vectorize_features(vec, features)
+        index_to_tag = logreg.predict(vectorized_features)
+        predicted_tags[i] = index_to_tag_dict[index_to_tag]
     ### END YOUR CODE
     return predicted_tags
 
