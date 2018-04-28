@@ -5,7 +5,9 @@ from tester import verify_hmm_model
 
 import numpy as np
 
+# For the sake of optimization
 _S_ = {}
+
 
 def hmm_train(sents):
     """
@@ -49,21 +51,20 @@ def hmm_viterbi(sent, total_tokens, q_tri_counts, q_bi_counts, q_uni_counts, e_w
 
     def q(prevprev, prev, cur):
         """
-        Computes linear interpolation probability for a trigram
+        Computes linear interpolation probability for a trigram == (prevprev, prev, cur)
         """
         assert lambda1 + lambda2 <= 1
 
         lambda3 = 1 - lambda1 - lambda2
         tri, bi, uni = (prevprev, prev, cur), (prev, cur), cur
 
-        return sum([lambda1 * q_tri_counts.get(tri, 0) / q_bi_counts.get(bi, np.inf),
-                    lambda2 * q_bi_counts.get(bi, 0) / q_uni_counts.get(uni, np.inf),
+        return sum([lambda1 * q_tri_counts.get(tri, 0) / q_bi_counts.get(tri[:-1], np.inf),
+                    lambda2 * q_bi_counts.get(bi, 0) / q_uni_counts.get(bi[0], np.inf),
                     lambda3 * q_uni_counts.get(uni, 0) / total_tokens])
 
     def e(word, tag):
         return float(e_word_tag_counts.get((word, tag), 0)) / e_tag_counts.get(tag, np.inf)
 
-    # _S_ = {}
     def S(i):
         if i < 0:
             return ['*']
@@ -92,11 +93,11 @@ def hmm_viterbi(sent, total_tokens, q_tri_counts, q_bi_counts, q_uni_counts, e_w
     u, v = max(pi[n - 1], key=lambda (_u, _v): pi[n - 1][_u, _v] * q(_u, _v, 'STOP'))
 
     if n == 1:
-        return [v]
-
-    y[-2], y[-1] = u, v
-    for k in xrange(n - 3, -1, -1):
-        y[k] = bp[k + 2][y[k + 1], y[k + 2]]
+        y[-1] = v
+    else:
+        y[-2], y[-1] = u, v
+        for k in xrange(n - 3, -1, -1):
+            y[k] = bp[k + 2][y[k + 1], y[k + 2]]
 
     ### END YOUR CODE
     return predicted_tags
@@ -115,7 +116,7 @@ def hmm_eval(test_data, total_tokens, q_tri_counts, q_bi_counts, q_uni_counts, e
     for sent in test_data:
         expected_tags = [tag for _, tag in sent]
         predicted_tags = hmm_viterbi(sent, total_tokens, q_tri_counts, q_bi_counts, q_uni_counts,
-                                     e_word_tag_counts, e_tag_counts, 0.8, 0.1)
+                                     e_word_tag_counts, e_tag_counts, 0.6, 0.3)
 
         n_mistakes += sum(et != pt for (et, pt) in zip(expected_tags, predicted_tags))
         n_test_tokens += len(sent)
