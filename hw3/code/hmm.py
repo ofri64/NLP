@@ -5,6 +5,7 @@ from tester import verify_hmm_model
 
 import numpy as np
 
+
 def hmm_train(sents):
     """
         sents: list of tagged sentences
@@ -22,11 +23,11 @@ def hmm_train(sents):
         for i in range(len(sent)):
 
             if i >= 2:
-                trigram = (sent[i-2][1], sent[i-1][1], sent[i][1])
+                trigram = (sent[i - 2][1], sent[i - 1][1], sent[i][1])
                 c_tri_counts[trigram] = c_tri_counts.get(trigram, 0) + 1
 
             if i >= 1:
-                bigram = (sent[i-1][1], sent[i][1])
+                bigram = (sent[i - 1][1], sent[i][1])
                 c_bi_counts[bigram] = c_bi_counts.get(bigram, 0) + 1
 
             unigram = sent[i][1]
@@ -37,7 +38,7 @@ def hmm_train(sents):
 
             total_tokens += 1
 
-    c_tag_counts = c_uni_counts # the two dictionaries are identical
+    c_tag_counts = c_uni_counts  # the two dictionaries are identical
 
     for trigram, trigram_count in c_tri_counts.items():
         bigram = trigram[1:]
@@ -60,13 +61,22 @@ def hmm_train(sents):
     ### END YOUR CODE
     return total_tokens, q_tri_counts, q_bi_counts, q_uni_counts, e_word_tag_counts, e_tag_counts
 
-def hmm_viterbi(sent, total_tokens, q_tri_counts, q_bi_counts, q_uni_counts, e_word_tag_counts,e_tag_counts, lambda1, lambda2):
+
+def hmm_viterbi(sent, total_tokens, q_tri_counts, q_bi_counts, q_uni_counts, e_word_tag_counts, e_tag_counts, lambda1,
+                lambda2):
     """
         Receives: a sentence to tag and the parameters learned by hmm
         Returns: predicted tags for the sentence
     """
     predicted_tags = [""] * (len(sent))
+
     ### YOUR CODE HERE
+
+    # Initiate variables for viterbi results
+    tags = e_tag_counts.keys()
+    pi_dict = {}
+    bp_dict = {}
+    n = len(sent)
 
     def q_li(u, v, w):
         """
@@ -80,44 +90,22 @@ def hmm_viterbi(sent, total_tokens, q_tri_counts, q_bi_counts, q_uni_counts, e_w
         unigram = w
 
         weighted_li = lambda1 * q_tri_counts.get(trigram, 0) + \
-            lambda2 * q_bi_counts.get(bigram, 0) + \
-            lambda3 * q_uni_counts.get(unigram, 0)
+                      lambda2 * q_bi_counts.get(bigram, 0) + \
+                      lambda3 * q_uni_counts.get(unigram, 0)
 
         return weighted_li
 
-    # Initiate variables for viterbi results
-    tags = e_tag_counts.keys()
-    pi_dict = {}
-    bp_dict = {}
-
-    # def get_pi_and_bi_k(k, u, v):
-    #     # Base Case
-    #     if k == 0:
-    #         return 1
-    #
-    #     # Recursion with memoization
-    #     key = (k, u, v)
-    #     if key not in pi_dict:
-    #         possible_tags = [get_pi_and_bi_k(k-1, w, u) * q_li(w, u, v) * e_word_tag_counts.get((sent[k][0], v), 0)
-    #                          for w in tags]
-    #         pi_k = np.max(possible_tags)
-    #         bi_k = np.argmax(possible_tags)
-    #         pi_dict[key] = pi_k
-    #         bp_dict[key] = tags[bi_k]
-    #     return pi_dict[key]
-    #
-    # # Run viterbi algorithm
-    n = len(sent)
-    # for _u in tags:
-    #     for _v in tags:
-    #         get_pi_and_bi_k(n, _u, _v)
-
+    S_dict = {}
     def S(i):
+        if i < 0:
+            return ['*']
         word = sent[i][0]
-        return tags
+        if word not in S_dict:
+            S_dict[word] = [t for (w, t) in e_word_tag_counts if w == word]
+        return S_dict[word]
 
     def pi(k, u, v):
-        if k == -1:
+        if k < 0 or '*' in (u, v):
             return 1
         return pi_dict[k, u, v]
 
@@ -126,28 +114,28 @@ def hmm_viterbi(sent, total_tokens, q_tri_counts, q_bi_counts, q_uni_counts, e_w
 
     for k in xrange(n):
         xk = sent[k][0]
-        for u in S(k-1):
+        for u in S(k - 1):
             for v in S(k):
-                exkv = e(xk, v)
-                values = [pi(k-1, w, u) * q_li(w, u, v) * exkv for w in tags]
+                values = [pi(k - 1, w, u) * q_li(w, u, v) * e(xk, v) for w in S(k - 2)]
                 pi_dict[k, u, v] = max(values)
-                bp_dict[k, u, v] = tags[np.argmax(values)]
+                bp_dict[k, u, v] = S(k - 2)[np.argmax(values)]
 
+    pi_n_u_v = [(k, u, v) for k, u, v in pi_dict.keys() if k == n - 1]
+    _, u, v = max(pi_n_u_v, key=lambda kuv: pi(*kuv))
 
-    # Now we have all the values we need in our dictionary
-    # Specifically all the (n, u, v) values
-    # pi_n_u_v = filter(lambda (key, score): key[0] == n, *pi_dict.items())
-    pi_n_u_v = [(key, value) for key, value in pi_dict.items() if key[0] == n]
-    index_for_max = np.argmax([pi(*k) for k, v in pi_n_u_v])
-    predicted_tags[-2], predicted_tags[-1] = pi_n_u_v[index_for_max][0][1:]
+    if n == 1:
+        return [v]
 
-    for k in xrange(n-3, -1, -1):
-        predicted_tags[k] = bp_dict[k+2, predicted_tags[k+1], predicted_tags[k+2]]
+    predicted_tags[-2], predicted_tags[-1] = u, v
+
+    for k in xrange(n - 3, -1, -1):
+        predicted_tags[k] = bp_dict[k + 2, predicted_tags[k + 1], predicted_tags[k + 2]]
 
     ### END YOUR CODE
     return predicted_tags
 
-def hmm_eval(test_data, total_tokens, q_tri_counts, q_bi_counts, q_uni_counts, e_word_tag_counts,e_tag_counts):
+
+def hmm_eval(test_data, total_tokens, q_tri_counts, q_bi_counts, q_uni_counts, e_word_tag_counts, e_tag_counts):
     """
     Receives: test data set and the parameters learned by hmm
     Returns an evaluation of the accuracy of hmm
@@ -155,12 +143,20 @@ def hmm_eval(test_data, total_tokens, q_tri_counts, q_bi_counts, q_uni_counts, e
     print "Start evaluation"
     acc_viterbi = 0.0
     ### YOUR CODE HERE
+
+    n_mistakes = 0
     for sent in test_data:
-        hmm_viterbi(sent[:5], total_tokens, q_tri_counts, q_bi_counts, q_uni_counts,
-                    e_word_tag_counts, e_tag_counts, 0.35, 0.45)
+        expected_tags = [token[1] for token in sent]
+        predicted_tags = hmm_viterbi(sent, total_tokens, q_tri_counts, q_bi_counts, q_uni_counts,
+                                     e_word_tag_counts, e_tag_counts, 0.35, 0.45)
+        n_mistakes += sum(et != pt for (et, pt) in zip(expected_tags, predicted_tags))
+
+    error = float(n_mistakes) / total_tokens
+    acc_viterbi = 1 - error
     ### END YOUR CODE
 
     return str(acc_viterbi)
+
 
 if __name__ == "__main__":
     print (get_details())
@@ -174,7 +170,8 @@ if __name__ == "__main__":
 
     total_tokens, q_tri_counts, q_bi_counts, q_uni_counts, e_word_tag_counts, e_tag_counts = hmm_train(train_sents)
     verify_hmm_model(total_tokens, q_tri_counts, q_bi_counts, q_uni_counts, e_word_tag_counts, e_tag_counts)
-    acc_viterbi = hmm_eval(dev_sents, total_tokens, q_tri_counts, q_bi_counts, q_uni_counts, e_word_tag_counts, e_tag_counts)
+    acc_viterbi = hmm_eval(dev_sents, total_tokens, q_tri_counts, q_bi_counts, q_uni_counts, e_word_tag_counts,
+                           e_tag_counts)
     print "Dev: Accuracy of Viterbi hmm: " + acc_viterbi
 
     train_dev_time = time.time()
@@ -184,7 +181,7 @@ if __name__ == "__main__":
         test_sents = read_conll_pos_file("Penn_Treebank/test.gold.conll")
         test_sents = preprocess_sent(vocab, test_sents)
         acc_viterbi = hmm_eval(test_sents, total_tokens, q_tri_counts, q_bi_counts, q_uni_counts,
-                                           e_word_tag_counts, e_tag_counts)
+                               e_word_tag_counts, e_tag_counts)
         print "Test: Accuracy of Viterbi hmm: " + acc_viterbi
         full_flow_end = time.time()
         print "Full flow elapsed: " + str(full_flow_end - start_time) + " seconds"
