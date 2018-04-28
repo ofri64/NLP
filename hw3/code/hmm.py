@@ -19,14 +19,15 @@ def hmm_train(sents):
 
     c_tri_counts, c_bi_counts, c_uni_counts, c_word_tag_counts, c_tag_counts = {}, {}, {}, {}, {}
 
-    for sent in sents:
-        for i in range(len(sent)):
-
-            if i >= 2:
+    for _sent in sents:
+        sent = _sent + [('STOP', 'STOP')]
+        total_tokens += len(sent)
+        for i in xrange(len(sent)):
+            if i > 1:
                 trigram = (sent[i - 2][1], sent[i - 1][1], sent[i][1])
                 c_tri_counts[trigram] = c_tri_counts.get(trigram, 0) + 1
 
-            if i >= 1:
+            if i > 0:
                 bigram = (sent[i - 1][1], sent[i][1])
                 c_bi_counts[bigram] = c_bi_counts.get(bigram, 0) + 1
 
@@ -36,7 +37,7 @@ def hmm_train(sents):
             word_tag = (sent[i][0], sent[i][1])
             c_word_tag_counts[word_tag] = c_word_tag_counts.get(word_tag, 0) + 1
 
-            total_tokens += 1
+            # total_tokens += 1
 
     c_tag_counts = c_uni_counts  # the two dictionaries are identical
 
@@ -71,30 +72,6 @@ def hmm_viterbi(sent, total_tokens, q_tri_counts, q_bi_counts, q_uni_counts, e_w
     predicted_tags = [""] * (len(sent))
 
     ### YOUR CODE HERE
-
-    # Initiate variables for viterbi results
-    tags = e_tag_counts.keys()
-    pi_dict = {}
-    bp_dict = {}
-    n = len(sent)
-
-    def q_li(u, v, w):
-        """
-        Computes linear interpolation probability for a trigram
-        """
-        assert lambda1 + lambda2 <= 1
-
-        lambda3 = 1 - (lambda1 + lambda2)
-        trigram = (u, v, w)
-        bigram = (v, w)
-        unigram = w
-
-        weighted_li = lambda1 * q_tri_counts.get(trigram, 0) + \
-                      lambda2 * q_bi_counts.get(bigram, 0) + \
-                      lambda3 * q_uni_counts.get(unigram, 0)
-
-        return weighted_li
-
     S_dict = {}
     def S(i):
         if i < 0:
@@ -104,24 +81,40 @@ def hmm_viterbi(sent, total_tokens, q_tri_counts, q_bi_counts, q_uni_counts, e_w
             S_dict[word] = [t for (w, t) in e_word_tag_counts if w == word]
         return S_dict[word]
 
+    pi_dict = {}
     def pi(k, u, v):
         if k < 0 or '*' in (u, v):
             return 1
         return pi_dict[k, u, v]
 
+    def q(u, v, w):
+        """
+        Computes linear interpolation probability for a trigram
+        """
+        assert lambda1 + lambda2 <= 1
+
+        lambda3 = 1 - (lambda1 + lambda2)
+        trigram, bigram, unigram = (u, v, w), (v, w), w
+
+        return sum([lambda1 * q_tri_counts.get(trigram, 0),
+                    lambda2 * q_bi_counts.get(bigram, 0),
+                    lambda3 * q_uni_counts.get(unigram, 0)])
+
     def e(xk, v):
         return e_word_tag_counts.get((xk, v), 0)
 
+    bp_dict = {}
+    n = len(sent)
     for k in xrange(n):
         xk = sent[k][0]
         for u in S(k - 1):
             for v in S(k):
-                values = [pi(k - 1, w, u) * q_li(w, u, v) * e(xk, v) for w in S(k - 2)]
+                values = [pi(k - 1, w, u) * q(w, u, v) * e(xk, v) for w in S(k - 2)]
                 pi_dict[k, u, v] = max(values)
                 bp_dict[k, u, v] = S(k - 2)[np.argmax(values)]
 
     pi_n_u_v = [(k, u, v) for k, u, v in pi_dict.keys() if k == n - 1]
-    _, u, v = max(pi_n_u_v, key=lambda kuv: pi(*kuv))
+    _, u, v = max(pi_n_u_v, key=lambda (k, u, v): pi(k, u, v) * q('STOP', u, v))
 
     if n == 1:
         return [v]
@@ -144,14 +137,16 @@ def hmm_eval(test_data, total_tokens, q_tri_counts, q_bi_counts, q_uni_counts, e
     acc_viterbi = 0.0
     ### YOUR CODE HERE
 
-    n_mistakes = 0
+    n_mistakes, n_test_tokens = 0, 0
     for sent in test_data:
         expected_tags = [token[1] for token in sent]
         predicted_tags = hmm_viterbi(sent, total_tokens, q_tri_counts, q_bi_counts, q_uni_counts,
-                                     e_word_tag_counts, e_tag_counts, 0.35, 0.45)
-        n_mistakes += sum(et != pt for (et, pt) in zip(expected_tags, predicted_tags))
+                                     e_word_tag_counts, e_tag_counts, 0.6, 0.3)
 
-    error = float(n_mistakes) / total_tokens
+        n_mistakes += sum(et != pt for (et, pt) in zip(expected_tags, predicted_tags))
+        n_test_tokens += len(sent)
+
+    error = float(n_mistakes) / n_test_tokens
     acc_viterbi = 1 - error
     ### END YOUR CODE
 
