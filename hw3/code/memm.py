@@ -13,16 +13,34 @@ def extract_features_base(curr_word, next_word, prev_word, prevprev_word, prev_t
     features = {}
     features['word'] = curr_word
     ### YOUR CODE HERE
-    raise NotImplementedError
+
+    features['next_word'] = next_word
+    features['prev_word'] = prev_word
+    features['prevprev_word'] = prevprev_word
+    features['prev_tag'] = prev_tag
+    features['prevprev_tag'] = prevprev_tag
+
+    features['prev_2_tags'] = '{0} {1}'.format(prevprev_tag, prev_tag)
+    features['prev_2_words'] = '{0} {1}'.format(prevprev_word, prev_word)
+
+    features['prev_and_next_words'] = '{0} {1}'.format(prev_word, next_word)
+    features['prevprev_prev_and_next_words'] = '{0} {1} {2}'.format(prevprev_word, prev_word, next_word)
+
+    features['prev_pair'] = '{0} {1}'.format(prev_word, prev_tag)
+    features['prevprev_pair'] = '{0} {1}'.format(prevprev_word, prevprev_tag)
+
     ### END YOUR CODE
     return features
+
 
 def extract_features(sentence, i):
     curr_word = sentence[i][0]
     prev_token = sentence[i - 1] if i > 0 else ('<s>', '*')
     prevprev_token = sentence[i - 2] if i > 1 else ('<s>', '*')
     next_token = sentence[i + 1] if i < (len(sentence) - 1) else ('</s>', 'STOP')
-    return extract_features_base(curr_word, next_token[0], prev_token[0], prevprev_token[0], prev_token[1], prevprev_token[1])
+    return extract_features_base(curr_word, next_token[0], prev_token[0], prevprev_token[0], prev_token[1],
+                                 prevprev_token[1])
+
 
 def vectorize_features(vec, features):
     """
@@ -35,6 +53,7 @@ def vectorize_features(vec, features):
     """
     example = [features]
     return vec.transform(example)
+
 
 def create_examples(sents, tag_to_idx_dict):
     examples = []
@@ -61,6 +80,7 @@ def memm_greeedy(sent, logreg, vec, index_to_tag_dict):
     ### END YOUR CODE
     return predicted_tags
 
+
 def memm_viterbi(sent, logreg, vec, index_to_tag_dict):
     """
         Receives: a sentence to tag and the parameters learned by memm
@@ -71,6 +91,7 @@ def memm_viterbi(sent, logreg, vec, index_to_tag_dict):
     raise NotImplementedError
     ### END YOUR CODE
     return predicted_tags
+
 
 def should_add_eval_log(sentene_index):
     if sentene_index > 0 and sentene_index % 10 == 0:
@@ -99,10 +120,12 @@ def memm_eval(test_data, logreg, vec, index_to_tag_dict):
             if acc_greedy == 0 and acc_viterbi == 0:
                 raise NotImplementedError
             eval_end_timer = time.time()
-            print str.format("Sentence index: {} greedy_acc: {}    Viterbi_acc:{} , elapsed: {} ", str(i), str(acc_greedy), str(acc_viterbi) , str (eval_end_timer - eval_start_timer))
+            print str.format("Sentence index: {} greedy_acc: {}    Viterbi_acc:{} , elapsed: {} ", str(i),
+                             str(acc_greedy), str(acc_viterbi), str(eval_end_timer - eval_start_timer))
             eval_start_timer = time.time()
 
     return str(acc_viterbi), str(acc_greedy)
+
 
 def build_tag_to_idx_dict(train_sentences):
     curr_tag_index = 0
