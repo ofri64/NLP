@@ -68,15 +68,16 @@ def hmm_viterbi(sent, total_tokens, q_tri_counts, q_bi_counts, q_uni_counts, e_w
     predicted_tags = [""] * (len(sent))
     ### YOUR CODE HERE
 
-    def q_li(trigram):
-        '''
-            Compute linear interpolation probability for a trigram
-        '''
+    def q_li(u, v, w):
+        """
+        Computes linear interpolation probability for a trigram
+        """
         assert lambda1 + lambda2 <= 1
 
         lambda3 = 1 - (lambda1 + lambda2)
-        bigram = trigram[1:]
-        unigram = bigram[1]
+        trigram = (u, v, w)
+        bigram = (v, w)
+        unigram = w
 
         weighted_li = lambda1 * q_tri_counts.get(trigram, 0) + \
             lambda2 * q_bi_counts.get(bigram, 0) + \
@@ -84,39 +85,64 @@ def hmm_viterbi(sent, total_tokens, q_tri_counts, q_bi_counts, q_uni_counts, e_w
 
         return weighted_li
 
-    def get_pi_and_bi_k(k, u, v):
-        # Base Case
-        if k == 0:
-            return 1
-
-        # Recursion with memoization
-        key = (k, u, v)
-        if key not in pi_dict:
-            possible_tags = [get_pi_and_bi_k(k-1, w, u) * q_li((w, u, v)) * e_word_tag_counts.get((sent[k][0], v), 0)
-                             for w in tags]
-            pi_k = np.max(possible_tags)
-            bi_k = np.argmax(possible_tags)
-            pi_dict[key] = pi_k
-            bp_dict[key] = bi_k
-        return pi_dict[key]
-
     # Initiate variables for viterbi results
     tags = e_tag_counts.keys()
     pi_dict = {}
     bp_dict = {}
 
-    # Run viterbi algorithm
-    n = len(sent) - 1
-    for _u in tags:
-        for _v in tags:
-            get_pi_and_bi_k(n, _u, _v)
+    # def get_pi_and_bi_k(k, u, v):
+    #     # Base Case
+    #     if k == 0:
+    #         return 1
+    #
+    #     # Recursion with memoization
+    #     key = (k, u, v)
+    #     if key not in pi_dict:
+    #         possible_tags = [get_pi_and_bi_k(k-1, w, u) * q_li(w, u, v) * e_word_tag_counts.get((sent[k][0], v), 0)
+    #                          for w in tags]
+    #         pi_k = np.max(possible_tags)
+    #         bi_k = np.argmax(possible_tags)
+    #         pi_dict[key] = pi_k
+    #         bp_dict[key] = tags[bi_k]
+    #     return pi_dict[key]
+    #
+    # # Run viterbi algorithm
+    n = len(sent)
+    # for _u in tags:
+    #     for _v in tags:
+    #         get_pi_and_bi_k(n, _u, _v)
+
+    def S(i):
+        word = sent[i][0]
+        return tags
+
+    def pi(k, u, v):
+        if k == -1:
+            return 1
+        return pi_dict[k, u, v]
+
+    def e(xk, v):
+        return e_word_tag_counts.get((xk, v), 0)
+
+    for k in xrange(n):
+        xk = sent[k][0]
+        for u in S(k-1):
+            for v in S(k):
+                exkv = e(xk, v)
+                values = [pi(k-1, w, u) * q_li(w, u, v) * exkv for w in tags]
+                pi_dict[k, u, v] = max(values)
+                bp_dict[k, u, v] = tags[np.argmax(values)]
+
 
     # Now we have all the values we need in our dictionary
     # Specifically all the (n, u, v) values
     # pi_n_u_v = filter(lambda (key, score): key[0] == n, *pi_dict.items())
     pi_n_u_v = [(key, value) for key, value in pi_dict.items() if key[0] == n]
-    # y_n_minus_1, y_n = np.argmax()
+    index_for_max = np.argmax([pi(*k) for k, v in pi_n_u_v])
+    predicted_tags[-2], predicted_tags[-1] = pi_n_u_v[index_for_max][0][1:]
 
+    for k in xrange(n-3, -1, -1):
+        predicted_tags[k] = bp_dict[k+2, predicted_tags[k+1], predicted_tags[k+2]]
 
     ### END YOUR CODE
     return predicted_tags
@@ -130,7 +156,7 @@ def hmm_eval(test_data, total_tokens, q_tri_counts, q_bi_counts, q_uni_counts, e
     acc_viterbi = 0.0
     ### YOUR CODE HERE
     for sent in test_data:
-        hmm_viterbi(sent, total_tokens, q_tri_counts, q_bi_counts, q_uni_counts,
+        hmm_viterbi(sent[:5], total_tokens, q_tri_counts, q_bi_counts, q_uni_counts,
                     e_word_tag_counts, e_tag_counts, 0.35, 0.45)
     ### END YOUR CODE
 
