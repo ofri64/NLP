@@ -5,6 +5,7 @@ from tester import verify_hmm_model
 
 import numpy as np
 
+_S_ = {}
 
 def hmm_train(sents):
     """
@@ -17,47 +18,20 @@ def hmm_train(sents):
     q_tri_counts, q_bi_counts, q_uni_counts, e_word_tag_counts, e_tag_counts = {}, {}, {}, {}, {}
     ### YOUR CODE HERE
 
-    c_tri_counts, c_bi_counts, c_uni_counts, c_word_tag_counts, c_tag_counts = {}, {}, {}, {}, {}
-
     for _sent in sents:
-        sent = _sent + [('STOP', 'STOP')]
-        total_tokens += len(sent)
-        for i in xrange(len(sent)):
-            if i > 1:
-                trigram = (sent[i - 2][1], sent[i - 1][1], sent[i][1])
-                c_tri_counts[trigram] = c_tri_counts.get(trigram, 0) + 1
+        total_tokens += len(_sent)
+        sent = [('*', '*'), ('*', '*')] + _sent + [('STOP', 'STOP')]
+        for i in xrange(2, len(sent)):
+            tri = (sent[i - 2][1], sent[i - 1][1], sent[i][1])
+            bi = (sent[i - 1][1], sent[i][1])
+            uni = sent[i][1]
+            wordtag = sent[i]
 
-            if i > 0:
-                bigram = (sent[i - 1][1], sent[i][1])
-                c_bi_counts[bigram] = c_bi_counts.get(bigram, 0) + 1
-
-            unigram = sent[i][1]
-            c_uni_counts[unigram] = c_uni_counts.get(unigram, 0) + 1
-
-            word_tag = (sent[i][0], sent[i][1])
-            c_word_tag_counts[word_tag] = c_word_tag_counts.get(word_tag, 0) + 1
-
-            # total_tokens += 1
-
-    c_tag_counts = c_uni_counts  # the two dictionaries are identical
-
-    for trigram, trigram_count in c_tri_counts.items():
-        bigram = trigram[1:]
-        q_tri_counts[trigram] = float(trigram_count) / c_bi_counts[bigram]
-
-    for bigram, bigram_count in c_bi_counts.items():
-        unigram = bigram[1]
-        q_bi_counts[bigram] = float(bigram_count) / c_uni_counts[unigram]
-
-    for unigram, unigram_count in c_uni_counts.items():
-        M = total_tokens
-        q_uni_counts[unigram] = float(unigram_count) / M
-
-    for word_tag, word_tag_count in c_word_tag_counts.items():
-        tag = word_tag[1]
-        e_word_tag_counts[word_tag] = float(word_tag_count) / c_tag_counts[tag]
-
-    e_tag_counts = q_uni_counts
+            q_tri_counts[tri] = q_tri_counts.get(tri, 0) + 1
+            q_bi_counts[bi] = q_bi_counts.get(bi, 0) + 1
+            q_uni_counts[uni] = q_uni_counts.get(uni, 0) + 1
+            e_tag_counts[uni] = e_tag_counts.get(uni, 0) + 1
+            e_word_tag_counts[wordtag] = e_word_tag_counts.get(wordtag, 0) + 1
 
     ### END YOUR CODE
     return total_tokens, q_tri_counts, q_bi_counts, q_uni_counts, e_word_tag_counts, e_tag_counts
@@ -72,57 +46,57 @@ def hmm_viterbi(sent, total_tokens, q_tri_counts, q_bi_counts, q_uni_counts, e_w
     predicted_tags = [""] * (len(sent))
 
     ### YOUR CODE HERE
-    S_dict = {}
-    def S(i):
-        if i < 0:
-            return ['*']
-        word = sent[i][0]
-        if word not in S_dict:
-            S_dict[word] = [t for (w, t) in e_word_tag_counts if w == word]
-        return S_dict[word]
 
-    pi_dict = {}
-    def pi(k, u, v):
-        if k < 0 or '*' in (u, v):
-            return 1
-        return pi_dict[k, u, v]
-
-    def q(u, v, w):
+    def q(prevprev, prev, cur):
         """
         Computes linear interpolation probability for a trigram
         """
         assert lambda1 + lambda2 <= 1
 
-        lambda3 = 1 - (lambda1 + lambda2)
-        trigram, bigram, unigram = (u, v, w), (v, w), w
+        lambda3 = 1 - lambda1 - lambda2
+        tri, bi, uni = (prevprev, prev, cur), (prev, cur), cur
 
-        return sum([lambda1 * q_tri_counts.get(trigram, 0),
-                    lambda2 * q_bi_counts.get(bigram, 0),
-                    lambda3 * q_uni_counts.get(unigram, 0)])
+        return sum([lambda1 * q_tri_counts.get(tri, 0) / q_bi_counts.get(bi, np.inf),
+                    lambda2 * q_bi_counts.get(bi, 0) / q_uni_counts.get(uni, np.inf),
+                    lambda3 * q_uni_counts.get(uni, 0) / total_tokens])
 
-    def e(xk, v):
-        return e_word_tag_counts.get((xk, v), 0)
+    def e(word, tag):
+        return float(e_word_tag_counts.get((word, tag), 0)) / e_tag_counts.get(tag, np.inf)
 
-    bp_dict = {}
+    # _S_ = {}
+    def S(i):
+        if i < 0:
+            return ['*']
+        word = sent[i][0]
+        if word not in _S_:
+            _S_[word] = [t for (w, t) in e_word_tag_counts if w == word]
+        return _S_[word]
+
     n = len(sent)
+    bp = {k: {} for k in xrange(n)}
+    pi = {k: {} for k in xrange(n)}
+    pi[-1] = {('*', '*'): 1}
+
     for k in xrange(n):
         xk = sent[k][0]
-        for u in S(k - 1):
-            for v in S(k):
-                values = [pi(k - 1, w, u) * q(w, u, v) * e(xk, v) for w in S(k - 2)]
-                pi_dict[k, u, v] = max(values)
-                bp_dict[k, u, v] = S(k - 2)[np.argmax(values)]
+        for v in S(k):  # v == cur
+            for u in S(k - 1):  # u == prev
+                pi[k][u, v] = -1
+                for i, w in enumerate(S(k - 2)):  # w == prevprev
+                    p = pi[k - 1][w, u] * q(w, u, v) * e(xk, v)
+                    if p > pi[k][u, v]:
+                        pi[k][u, v] = p
+                        bp[k][u, v] = S(k - 2)[i]
 
-    pi_n_u_v = [(k, u, v) for k, u, v in pi_dict.keys() if k == n - 1]
-    _, u, v = max(pi_n_u_v, key=lambda (k, u, v): pi(k, u, v) * q('STOP', u, v))
+    y = predicted_tags
+    u, v = max(pi[n - 1], key=lambda (_u, _v): pi[n - 1][_u, _v] * q(_u, _v, 'STOP'))
 
     if n == 1:
         return [v]
 
-    predicted_tags[-2], predicted_tags[-1] = u, v
-
+    y[-2], y[-1] = u, v
     for k in xrange(n - 3, -1, -1):
-        predicted_tags[k] = bp_dict[k + 2, predicted_tags[k + 1], predicted_tags[k + 2]]
+        y[k] = bp[k + 2][y[k + 1], y[k + 2]]
 
     ### END YOUR CODE
     return predicted_tags
@@ -139,9 +113,9 @@ def hmm_eval(test_data, total_tokens, q_tri_counts, q_bi_counts, q_uni_counts, e
 
     n_mistakes, n_test_tokens = 0, 0
     for sent in test_data:
-        expected_tags = [token[1] for token in sent]
+        expected_tags = [tag for _, tag in sent]
         predicted_tags = hmm_viterbi(sent, total_tokens, q_tri_counts, q_bi_counts, q_uni_counts,
-                                     e_word_tag_counts, e_tag_counts, 0.6, 0.3)
+                                     e_word_tag_counts, e_tag_counts, 0.8, 0.1)
 
         n_mistakes += sum(et != pt for (et, pt) in zip(expected_tags, predicted_tags))
         n_test_tokens += len(sent)
