@@ -6,8 +6,8 @@ from submitters_details import get_details
 
 # For the sake of optimization
 S = {
-    -2 : ['*'],
-    -1 : ['*']
+    -2: ['*'],
+    -1: ['*']
 }
 
 def extract_features_base(curr_word, next_word, prev_word, prevprev_word, prev_tag, prevprev_tag):
@@ -96,8 +96,10 @@ def memm_viterbi(sent, logreg, vec, index_to_tag_dict):
         Returns: predicted tags for the sentence
     """
 
+    tag_to_index_dict = invert_dict(index_to_tag_dict)
+
     def q(features):
-        return logreg.predict_proba(features)[0]
+        return logreg.predict_proba(features)
 
     predicted_tags = [""] * (len(sent))
     ### YOUR CODE HERE
@@ -107,12 +109,34 @@ def memm_viterbi(sent, logreg, vec, index_to_tag_dict):
     pi[-1] = {('*', '*'): 1}
 
     for k in xrange(n):
+        features = extract_features(sent, k)
+        probs = q(vectorize_features(vec, features))
+
         for v in S[k]:  # v == cur
             for u in S[k - 1]:  # u == prev
                 curr_value = -1
-                for t in S[k - 2]:
-                    t_value = pi[k - 1][t, u] * q()
+                curr_tag = '*'
 
+                for t in S[k - 2]:
+                    t_index = tag_to_index_dict[t]
+                    t_value = pi[k - 1][t, u] * probs[t_index]
+                    if t_value > curr_value:
+                        curr_value = t_value
+                        curr_tag = t
+
+                pi[k][u, v] = curr_value
+                bp[k][u, v] = curr_tag
+
+    # Dynamically store all y values
+    y = predicted_tags
+    u, v = max(pi[n - 1], key=lambda (_u, _v): pi[n - 1][_u, _v])
+
+    if n == 1:
+        y[-1] = v
+    else:
+        y[-2], y[-1] = u, v
+        for k in xrange(n - 3, -1, -1):
+            y[k] = bp[k + 2][y[k + 1], y[k + 2]]
 
     ### END YOUR CODE
     return predicted_tags
@@ -193,7 +217,7 @@ if __name__ == "__main__":
     for sent in train_sents:
         for i in xrange(len(sent)):
             word, tag = sent[i]
-            if word not in _S_:
+            if word not in S:
                 S[word] = [tag]
             else:
                 if tag not in S[word]:
