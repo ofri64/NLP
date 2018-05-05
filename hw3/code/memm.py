@@ -4,6 +4,11 @@ from sklearn import linear_model
 import time
 from submitters_details import get_details
 
+# For the sake of optimization
+S = {
+    -2 : ['*'],
+    -1 : ['*']
+}
 
 def extract_features_base(curr_word, next_word, prev_word, prevprev_word, prev_tag, prevprev_tag):
     """
@@ -90,9 +95,25 @@ def memm_viterbi(sent, logreg, vec, index_to_tag_dict):
         Receives: a sentence to tag and the parameters learned by memm
         Returns: predicted tags for the sentence
     """
+
+    def q(features):
+        return logreg.predict_proba(features)[0]
+
     predicted_tags = [""] * (len(sent))
     ### YOUR CODE HERE
-    raise NotImplementedError
+    n = len(sent)
+    bp = {k: {} for k in xrange(n)}
+    pi = {k: {} for k in xrange(n)}
+    pi[-1] = {('*', '*'): 1}
+
+    for k in xrange(n):
+        for v in S[k]:  # v == cur
+            for u in S[k - 1]:  # u == prev
+                curr_value = -1
+                for t in S[k - 2]:
+                    t_value = pi[k - 1][t, u] * q()
+
+
     ### END YOUR CODE
     return predicted_tags
 
@@ -166,6 +187,19 @@ if __name__ == "__main__":
     num_train_examples = len(train_examples)
     print "#example: " + str(num_train_examples)
     print "Done"
+
+    # Optimization - Save training set tags dict
+    print "Optimizing tags"
+    for sent in train_sents:
+        for i in xrange(len(sent)):
+            word, tag = sent[i]
+            if word not in _S_:
+                S[word] = [tag]
+            else:
+                if tag not in S[word]:
+                    S[word].append(tag)
+    print "Done"
+    # End of optimization
 
     print "Create dev examples"
     dev_examples, dev_labels = create_examples(dev_sents, tag_to_idx_dict)
