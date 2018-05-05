@@ -5,10 +5,7 @@ import time
 from submitters_details import get_details
 
 # For the sake of optimization
-S = {
-    -2: ['*'],
-    -1: ['*']
-}
+_S_ = {}
 
 def extract_features_base(curr_word, next_word, prev_word, prevprev_word, prev_tag, prevprev_tag):
     """
@@ -101,6 +98,12 @@ def memm_viterbi(sent, logreg, vec, index_to_tag_dict):
     def q(features):
         return logreg.predict_proba(features)
 
+    def S(i):
+        if i < 0:
+            return ['*']
+        word = sent[i][0]
+        return _S_[word]
+
     predicted_tags = [""] * (len(sent))
     ### YOUR CODE HERE
     n = len(sent)
@@ -112,12 +115,12 @@ def memm_viterbi(sent, logreg, vec, index_to_tag_dict):
         features = extract_features(sent, k)
         probs = q(vectorize_features(vec, features))
 
-        for v in S[k]:  # v == cur
-            for u in S[k - 1]:  # u == prev
+        for v in S(k):  # v == cur
+            for u in S(k - 1):  # u == prev
                 curr_value = -1
                 curr_tag = '*'
 
-                for t in S[k - 2]:
+                for t in S(k - 2):
                     t_index = tag_to_index_dict[t]
                     t_value = pi[k - 1][t, u] * probs[t_index]
                     if t_value > curr_value:
@@ -158,11 +161,26 @@ def memm_eval(test_data, logreg, vec, index_to_tag_dict):
     acc_viterbi, acc_greedy = 0.0, 0.0
     eval_start_timer = time.time()
 
+    greedy_correct = 0.0
+    viterbi_correct = 0.0
+    total_words = 0.0
+
     for i, sen in enumerate(test_data):
 
         ### YOUR CODE HERE
         ### Make sure to update Viterbi and greedy accuracy
-        raise NotImplementedError
+        n = len(sen)
+        total_words += n
+
+        greedy_predictions = memm_greeedy(sen, logreg, vec, index_to_tag_dict)
+        viterbi_predictions = memm_viterbi(sen, logreg, vec, index_to_tag_dict)
+        real_predictions = [t for (w, t) in sen]
+
+        greedy_correct += sum([real_predictions[i] == greedy_predictions[i] for i in range(n)])
+        viterbi_correct += sum([real_predictions[i] == viterbi_predictions[i] for i in range(n)])
+
+        acc_greedy = greedy_correct / total_words
+        acc_viterbi = viterbi_correct / total_words
         ### END YOUR CODE
 
         if should_add_eval_log(i):
@@ -217,11 +235,11 @@ if __name__ == "__main__":
     for sent in train_sents:
         for i in xrange(len(sent)):
             word, tag = sent[i]
-            if word not in S:
-                S[word] = [tag]
+            if word not in _S_:
+                _S_[word] = [tag]
             else:
-                if tag not in S[word]:
-                    S[word].append(tag)
+                if tag not in _S_[word]:
+                    _S_[word].append(tag)
     print "Done"
     # End of optimization
 
