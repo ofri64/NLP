@@ -81,7 +81,7 @@ def memm_greeedy(sent, logreg, vec, index_to_tag_dict):
     for i in xrange(len(sent)):
         features = extract_features(sent, i)
         vectorized_features = vectorize_features(vec, features)
-        index_to_tag = logreg.predict(vectorized_features)
+        index_to_tag = logreg.predict(vectorized_features)[0]
         predicted_tags[i] = index_to_tag_dict[index_to_tag]
     ### END YOUR CODE
     return predicted_tags
@@ -119,16 +119,16 @@ def memm_viterbi(sent, logreg, vec, index_to_tag_dict):
             for u in S(k - 1):  # u == prev
                 curr_value = -1
                 curr_tag = '*'
+                for t in S(k - 2): # t == prevprev
+                    v_index = tag_to_index_dict[v]
+                    v_value = pi[k - 1][t, u] * probs[0][v_index]
 
-                for t in S(k - 2):
-                    t_index = tag_to_index_dict[t]
-                    t_value = pi[k - 1][t, u] * probs[t_index]
-                    if t_value > curr_value:
-                        curr_value = t_value
-                        curr_tag = t
+                    if v_value > curr_value:
+                        curr_value = v_value
+                        curr_tag = v
 
-                pi[k][u, v] = curr_value
-                bp[k][u, v] = curr_tag
+            pi[k][u, v] = curr_value
+            bp[k][u, v] = curr_tag
 
     # Dynamically store all y values
     y = predicted_tags
@@ -211,8 +211,8 @@ def build_tag_to_idx_dict(train_sentences):
 if __name__ == "__main__":
     full_flow_start = time.time()
     print (get_details())
-    train_sents = read_conll_pos_file("Penn_Treebank/train.gold.conll")
-    dev_sents = read_conll_pos_file("Penn_Treebank/dev.gold.conll")
+    train_sents = read_conll_pos_file("Penn_Treebank/train.gold.conll")[:1000]
+    dev_sents = read_conll_pos_file("Penn_Treebank/dev.gold.conll")[:100]
 
     vocab = compute_vocab_count(train_sents)
     train_sents = preprocess_sent(vocab, train_sents)
