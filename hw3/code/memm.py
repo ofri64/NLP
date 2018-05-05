@@ -115,20 +115,34 @@ def memm_viterbi(sent, logreg, vec, index_to_tag_dict):
         features = extract_features(sent, k)
         probs = q(vectorize_features(vec, features))
 
+        # for v in S(k):  # v == cur
+        #     for u in S(k - 1):  # u == prev
+        #         curr_value = -1
+        #         curr_tag = '*'
+        #         for t in S(k - 2): # t == prevprev
+        #             v_index = tag_to_index_dict[v]
+        #             v_value = pi[k - 1][t, u] * probs[0][v_index]
+        #
+        #             if v_value > curr_value:
+        #                 curr_value = v_value
+        #                 curr_tag = v
+        #
+        #                 pi[k][u, v] = curr_value
+        #                 bp[k][u, v] = curr_tag
+
         for v in S(k):  # v == cur
             for u in S(k - 1):  # u == prev
-                curr_value = -1
-                curr_tag = '*'
-                for t in S(k - 2): # t == prevprev
+                pi_opt, bp_opt = -1, None
+                optional_tags = S(k - 2)
+                for i, t in enumerate(optional_tags): # t == prevprev
                     v_index = tag_to_index_dict[v]
-                    v_value = pi[k - 1][t, u] * probs[0][v_index]
+                    p = pi[k - 1][t, u] * probs[0][v_index]
+                    if p > pi_opt:
+                        pi_opt = p
+                        bp_opt = optional_tags[i]
 
-                    if v_value > curr_value:
-                        curr_value = v_value
-                        curr_tag = v
-
-            pi[k][u, v] = curr_value
-            bp[k][u, v] = curr_tag
+                bp[k][u, v] = pi_opt
+                bp[k][u, v] = bp_opt
 
     # Dynamically store all y values
     y = predicted_tags
