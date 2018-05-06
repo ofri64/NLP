@@ -131,12 +131,13 @@ def memm_viterbi(sent, logreg, vec, index_to_tag_dict):
         #                 bp[k][u, v] = curr_tag
 
         for v in S(k):  # v == cur
+            pikm1 = pi[k - 1]
             for u in S(k - 1):  # u == prev
                 pi_opt, bp_opt = -1, None
                 optional_tags = S(k - 2)
                 for i, t in enumerate(optional_tags): # t == prevprev
                     v_index = tag_to_index_dict[v]
-                    p = pi[k - 1][t, u] * probs[0][v_index]
+                    p = pikm1[t, u] * probs[0][v_index]
                     if p > pi_opt:
                         pi_opt = p
                         bp_opt = optional_tags[i]
