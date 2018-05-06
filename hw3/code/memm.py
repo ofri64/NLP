@@ -141,7 +141,7 @@ def memm_viterbi(sent, logreg, vec, index_to_tag_dict):
                         pi_opt = p
                         bp_opt = optional_tags[i]
 
-                bp[k][u, v] = pi_opt
+                pi[k][u, v] = pi_opt
                 bp[k][u, v] = bp_opt
 
     # Dynamically store all y values
@@ -225,8 +225,8 @@ def build_tag_to_idx_dict(train_sentences):
 if __name__ == "__main__":
     full_flow_start = time.time()
     print (get_details())
-    train_sents = read_conll_pos_file("Penn_Treebank/train.gold.conll")[:1000]
-    dev_sents = read_conll_pos_file("Penn_Treebank/dev.gold.conll")[:100]
+    train_sents = read_conll_pos_file("Penn_Treebank/train.gold.conll")
+    dev_sents = read_conll_pos_file("Penn_Treebank/dev.gold.conll")
 
     vocab = compute_vocab_count(train_sents)
     train_sents = preprocess_sent(vocab, train_sents)
