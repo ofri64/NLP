@@ -21,15 +21,16 @@ def extract_features_base(curr_word, next_word, prev_word, prevprev_word, prev_t
     features['prevprev_word'] = prevprev_word
     features['prev_tag'] = prev_tag
     features['prevprev_tag'] = prevprev_tag
+    features['prevprev_prev_tag'] = prevprev_tag + "_" + prev_tag
 
-    features['prev_2_tags'] = '{0} {1}'.format(prevprev_tag, prev_tag)
-    features['prev_2_words'] = '{0} {1}'.format(prevprev_word, prev_word)
-
-    features['prev_and_next_words'] = '{0} {1}'.format(prev_word, next_word)
-    features['prevprev_prev_and_next_words'] = '{0} {1} {2}'.format(prevprev_word, prev_word, next_word)
-
-    features['prev_pair'] = '{0} {1}'.format(prev_word, prev_tag)
-    features['prevprev_pair'] = '{0} {1}'.format(prevprev_word, prevprev_tag)
+    # features['prev_2_tags'] = '{0} {1}'.format(prevprev_tag, prev_tag)
+    # features['prev_2_words'] = '{0} {1}'.format(prevprev_word, prev_word)
+    #
+    # features['prev_and_next_words'] = '{0} {1}'.format(prev_word, next_word)
+    # features['prevprev_prev_and_next_words'] = '{0} {1} {2}'.format(prevprev_word, prev_word, next_word)
+    #
+    # features['prev_pair'] = '{0} {1}'.format(prev_word, prev_tag)
+    # features['prevprev_pair'] = '{0} {1}'.format(prevprev_word, prevprev_tag)
 
     ### END YOUR CODE
     return features
