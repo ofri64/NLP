@@ -191,8 +191,8 @@ def memm_eval(test_data, logreg, vec, index_to_tag_dict):
         viterbi_predictions = memm_viterbi(sen, logreg, vec, index_to_tag_dict)
         real_predictions = [t for (w, t) in sen]
 
-        greedy_correct += sum([real_predictions[i] == greedy_predictions[i] for i in range(n)])
-        viterbi_correct += sum([real_predictions[i] == viterbi_predictions[i] for i in range(n)])
+        greedy_correct += sum([real_predictions[idx] == greedy_predictions[idx] for idx in range(n)])
+        viterbi_correct += sum([real_predictions[idx] == viterbi_predictions[idx] for idx in range(n)])
 
         acc_greedy = greedy_correct / total_words
         acc_viterbi = viterbi_correct / total_words
@@ -226,8 +226,8 @@ def build_tag_to_idx_dict(train_sentences):
 if __name__ == "__main__":
     full_flow_start = time.time()
     print (get_details())
-    train_sents = read_conll_pos_file("Penn_Treebank/train.gold.conll")
-    dev_sents = read_conll_pos_file("Penn_Treebank/dev.gold.conll")
+    train_sents = read_conll_pos_file("Penn_Treebank/train.gold.conll")[:1000]
+    dev_sents = read_conll_pos_file("Penn_Treebank/dev.gold.conll")[:100]
 
     vocab = compute_vocab_count(train_sents)
     train_sents = preprocess_sent(vocab, train_sents)
