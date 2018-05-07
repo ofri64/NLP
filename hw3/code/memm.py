@@ -180,6 +180,9 @@ def memm_eval(test_data, logreg, vec, index_to_tag_dict):
     greedy_correct = 0.0
     viterbi_correct = 0.0
     total_words = 0.0
+    should_log_mistake = True
+    max_mistake_log = 100
+    mistakes = []
 
     for i, sen in enumerate(test_data):
 
@@ -195,6 +198,13 @@ def memm_eval(test_data, logreg, vec, index_to_tag_dict):
         greedy_correct += sum([real_predictions[idx] == greedy_predictions[idx] for idx in range(n)])
         viterbi_correct += sum([real_predictions[idx] == viterbi_predictions[idx] for idx in range(n)])
 
+        if should_log_mistake:
+            greedy_incorrect = [real_predictions[idx] != viterbi_predictions[idx] for idx in range(n)]
+            mistakes.extend(greedy_incorrect)
+            if len(mistakes) >= max_mistake_log:
+                should_log_mistake = False
+
+
         acc_greedy = greedy_correct / total_words
         acc_viterbi = viterbi_correct / total_words
         ### END YOUR CODE
@@ -206,6 +216,8 @@ def memm_eval(test_data, logreg, vec, index_to_tag_dict):
             print str.format("Sentence index: {} greedy_acc: {}    Viterbi_acc:{} , elapsed: {} ", str(i),
                              str(acc_greedy), str(acc_viterbi), str(eval_end_timer - eval_start_timer))
             eval_start_timer = time.time()
+
+    print str.format("Mistaken words: {}", str(mistakes))
 
     return str(acc_viterbi), str(acc_greedy)
 
@@ -227,8 +239,8 @@ def build_tag_to_idx_dict(train_sentences):
 if __name__ == "__main__":
     full_flow_start = time.time()
     print (get_details())
-    train_sents = read_conll_pos_file("Penn_Treebank/train.gold.conll")[:1000]
-    dev_sents = read_conll_pos_file("Penn_Treebank/dev.gold.conll")[:100]
+    train_sents = read_conll_pos_file("Penn_Treebank/train.gold.conll")
+    dev_sents = read_conll_pos_file("Penn_Treebank/dev.gold.conll")
 
     vocab = compute_vocab_count(train_sents)
     train_sents = preprocess_sent(vocab, train_sents)
