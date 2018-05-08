@@ -87,7 +87,7 @@ def hmm_viterbi(sent, total_tokens, q_tri_counts, q_bi_counts, q_uni_counts, e_w
                     p = pi[k - 1][w, u] * q(w, u, v) * e(xk, v)
                     if p > pi[k][u, v]:
                         pi[k][u, v] = p
-                        bp[k][u, v] = S(k - 2)[i]
+                        bp[k][u, v] = w
 
     y = predicted_tags
     u, v = max(pi[n - 1], key=lambda (_u, _v): pi[n - 1][_u, _v] * q(_u, _v, 'STOP'))
@@ -114,11 +114,12 @@ def hmm_eval(test_data, total_tokens, q_tri_counts, q_bi_counts, q_uni_counts, e
 
     n_mistakes, n_test_tokens = 0, 0
     for sent in test_data:
-        expected_tags = [tag for _, tag in sent]
         predicted_tags = hmm_viterbi(sent, total_tokens, q_tri_counts, q_bi_counts, q_uni_counts,
                                      e_word_tag_counts, e_tag_counts, 0.6, 0.3)
 
-        n_mistakes += sum(et != pt for (et, pt) in zip(expected_tags, predicted_tags))
+        for i, (_, tag) in enumerate(sent):
+            n_mistakes += (tag != predicted_tags[i])
+
         n_test_tokens += len(sent)
 
     error = float(n_mistakes) / n_test_tokens
