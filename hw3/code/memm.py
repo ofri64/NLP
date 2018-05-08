@@ -23,6 +23,9 @@ def extract_features_base(curr_word, next_word, prev_word, prevprev_word, prev_t
     features['prevprev_tag'] = prevprev_tag
     features['prevprev_prev_tag'] = prevprev_tag + "_" + prev_tag
 
+    features.update(dict(("prefix_" + str(i), curr_word[:i + 1]) for i in range(min(4, len(curr_word)))))
+    features.update(dict(("suffix_" + str(i), curr_word[-i - 1:]) for i in range(min(4, len(curr_word)))))
+
     # features['prev_2_tags'] = '{0} {1}'.format(prevprev_tag, prev_tag)
     # features['prev_2_words'] = '{0} {1}'.format(prevprev_word, prev_word)
     #
@@ -199,8 +202,9 @@ def memm_eval(test_data, logreg, vec, index_to_tag_dict):
         viterbi_correct += sum([real_predictions[idx] == viterbi_predictions[idx] for idx in range(n)])
 
         if should_log_mistake:
-            greedy_incorrect = [real_predictions[idx] != viterbi_predictions[idx] for idx in range(n)]
-            mistakes.extend(greedy_incorrect)
+            greedy_incorrect = [idx for idx in range(n) if real_predictions[idx] != viterbi_predictions[idx]]
+            if len(greedy_incorrect) >= 3:
+                mistakes.append((i, greedy_incorrect))
             if len(mistakes) >= max_mistake_log:
                 should_log_mistake = False
 
