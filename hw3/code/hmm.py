@@ -157,8 +157,10 @@ def grid_search_lambda(dev_sents, total_tokens, q_tri_counts, q_bi_counts, q_uni
         'lambda_3': [],
         'accuracy': []
     }
-    for lambda_1 in np.arange(0, 1, 0.1):
-        for lambda_2 in np.arange(0, 1 - lambda_1, 0.1):
+    for lambda_1 in np.arange(0, 1.1, 0.1):
+        for lambda_2 in np.arange(0, 1.1, 0.1):
+            if (lambda_1 + lambda_2) > 1:
+                continue
             lambda_3 = 1 - (lambda_1 + lambda_2)
             accuracy = evaluate_lambda_values(dev_sents, total_tokens, q_tri_counts, q_bi_counts,
                                               q_uni_counts, e_word_tag_counts, e_tag_counts, lambda_1, lambda_2)
