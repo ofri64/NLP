@@ -4,6 +4,8 @@ from submitters_details import get_details
 from tester import verify_hmm_model
 
 import numpy as np
+import pandas as pd
+import pickle
 
 # For the sake of optimization
 _S_ = {}
@@ -115,7 +117,7 @@ def hmm_eval(test_data, total_tokens, q_tri_counts, q_bi_counts, q_uni_counts, e
     n_mistakes, n_test_tokens = 0, 0
     for sent in test_data:
         predicted_tags = hmm_viterbi(sent, total_tokens, q_tri_counts, q_bi_counts, q_uni_counts,
-                                     e_word_tag_counts, e_tag_counts, 0.6, 0.3)
+                                     e_word_tag_counts, e_tag_counts, 0.9, 0.0)
 
         for i, (_, tag) in enumerate(sent):
             n_mistakes += (tag != predicted_tags[i])
@@ -129,6 +131,52 @@ def hmm_eval(test_data, total_tokens, q_tri_counts, q_bi_counts, q_uni_counts, e
     return str(acc_viterbi)
 
 
+def evaluate_lambda_values(dev_sents, total_tokens, q_tri_counts, q_bi_counts, q_uni_counts, e_word_tag_counts,
+                           e_tag_counts, lambda_1, lambda_2):
+    acc_viterbi = 0.0
+    n_mistakes, n_test_tokens = 0, 0
+    for sent in dev_sents:
+        predicted_tags = hmm_viterbi(sent, total_tokens, q_tri_counts, q_bi_counts, q_uni_counts,
+                                     e_word_tag_counts, e_tag_counts, lambda_1, lambda_2)
+
+        for i, (_, tag) in enumerate(sent):
+            n_mistakes += (tag != predicted_tags[i])
+
+        n_test_tokens += len(sent)
+
+    error = float(n_mistakes) / n_test_tokens
+    acc_viterbi = 1 - error
+    return str(acc_viterbi)
+
+
+def grid_search_lambda(dev_sents, total_tokens, q_tri_counts, q_bi_counts, q_uni_counts, e_word_tag_counts,
+                           e_tag_counts):
+    accuracy_results = {
+        'lambda_1': [],
+        'lambda_2': [],
+        'lambda_3': [],
+        'accuracy': []
+    }
+    for lambda_1 in np.arange(0, 1, 0.1):
+        for lambda_2 in np.arange(0, 1 - lambda_1, 0.1):
+            lambda_3 = 1 - (lambda_1 + lambda_2)
+            accuracy = evaluate_lambda_values(dev_sents, total_tokens, q_tri_counts, q_bi_counts,
+                                              q_uni_counts, e_word_tag_counts, e_tag_counts, lambda_1, lambda_2)
+            accuracy_results['lambda_1'].append(lambda_1)
+            accuracy_results['lambda_2'].append(lambda_2)
+            accuracy_results['lambda_3'].append(lambda_3)
+            accuracy_results['accuracy'].append(accuracy)
+            print "lambda 1: {0}, lambda 2: {1}, lambda 3: {2}, accuracy: {3}".format(
+                lambda_1, lambda_2, lambda_3, accuracy)
+
+    results = pd.DataFrame(accuracy_results)
+    results.to_csv('../grid_search_res.csv')
+
+
+def load_pickle(path):
+    with open(path, "rb") as input_object:
+        return pickle.load(input_object)
+
 if __name__ == "__main__":
     print (get_details())
     start_time = time.time()
@@ -140,6 +188,7 @@ if __name__ == "__main__":
     dev_sents = preprocess_sent(vocab, dev_sents)
 
     total_tokens, q_tri_counts, q_bi_counts, q_uni_counts, e_word_tag_counts, e_tag_counts = hmm_train(train_sents)
+
     verify_hmm_model(total_tokens, q_tri_counts, q_bi_counts, q_uni_counts, e_word_tag_counts, e_tag_counts)
     acc_viterbi = hmm_eval(dev_sents, total_tokens, q_tri_counts, q_bi_counts, q_uni_counts, e_word_tag_counts,
                            e_tag_counts)
@@ -156,3 +205,18 @@ if __name__ == "__main__":
         print "Test: Accuracy of Viterbi hmm: " + acc_viterbi
         full_flow_end = time.time()
         print "Full flow elapsed: " + str(full_flow_end - start_time) + " seconds"
+
+
+    # grid search part
+
+    # pickle_path = "../pickles/"
+    # pickle_suffix = ".pkl"
+    # dev_sents = load_pickle(pickle_path + 'dev_sents' + pickle_suffix)
+    # total_tokens = load_pickle(pickle_path + 'total_tokens' + pickle_suffix)
+    # tri_count = load_pickle(pickle_path + 'tri_count' + pickle_suffix)
+    # bi_count = load_pickle(pickle_path + 'bi_counts' + pickle_suffix)
+    # uni_counts = load_pickle(pickle_path + 'uni_counts' + pickle_suffix)
+    # word_tags_counts = load_pickle(pickle_path + 'word_tag_counts' + pickle_suffix)
+    # tag_counts = load_pickle(pickle_path + 'tag_counts' + pickle_suffix)
+    #
+    # grid_search_lambda(dev_sents, total_tokens, tri_count, bi_count, uni_counts, word_tags_counts, tag_counts)
