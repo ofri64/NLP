@@ -113,7 +113,8 @@ def memm_viterbi(sent, logreg, vec, index_to_tag_dict):
         # extracting defualt features with true tags
         default_features = extract_features(sent, k)
 
-        # for each pair of tags (prevprev = t, prev = u), create features dict which uses these, as they were predicted
+        # for each pair of tags (prevprev = t, prev = u),
+        # create features dict which uses these, as they were predicted
         for i, (t, u) in enumerate(product(S(k - 2), S(k - 1))):
             features_idxs[t, u] = i
             t_u_features = dict(default_features)
@@ -134,21 +135,18 @@ def memm_viterbi(sent, logreg, vec, index_to_tag_dict):
     pi = {k: {} for k in xrange(n)}
     pi[-1] = {('*', '*'): 0}
 
+    # iterate through sentence and use matrix probs to define relevant q()
     for k in xrange(n):
         q = logregprobs(k)
         for v in S(k):  # v == cur
             v_idx = _tag_to_idx_dict_[v]
             for u in S(k - 1):  # u == prev
-                # pi[k][u, v] = -np.inf
                 pi_opt, bp_opt = -np.inf, None
                 for i, t in enumerate(S(k - 2)):  # t == prevprev
-                    p = pi[k - 1][t, u] + q[t, u][v_idx]
+                    p = pi[k - 1][t, u] + q[t, u][v_idx]  # addition because we use log probs
                     if p > pi_opt:
                         pi_opt = p
                         bp_opt = t
-                    # if p > pi[k][u, v]:
-                    #     pi[k][u, v] = p
-                    #     bp[k][u, v] = t
 
                 pi[k][u, v] = pi_opt
                 bp[k][u, v] = bp_opt
@@ -188,6 +186,10 @@ def memm_eval(test_data, logreg, vec, index_to_tag_dict):
     viterbi_correct = 0.0
     total_words = 0.0
 
+    mistakes = []
+    should_log_mistakes = True
+    max_log_mistakes = 50
+
     for i, sen in enumerate(test_data):
 
         ### YOUR CODE HERE
@@ -202,6 +204,15 @@ def memm_eval(test_data, logreg, vec, index_to_tag_dict):
         greedy_correct += sum(real_predictions[i] == greedy_predictions[i] for i in range(n))
         viterbi_correct += sum(real_predictions[i] == viterbi_predictions[i] for i in range(n))
 
+        # Store first 50 mistakes, only relate to sentences with >=2 mistakes
+        if should_log_mistakes:
+            viterbi_incorrect = [(sen[idx], viterbi_predictions[idx]) for idx in range(n)
+                                 if real_predictions[idx] != viterbi_predictions[idx]]
+            if len(viterbi_incorrect) >= 2:
+                mistakes.append((i, viterbi_incorrect))
+            if len(mistakes) >= max_log_mistakes:
+                should_log_mistakes = False
+
         acc_greedy = greedy_correct / total_words
         acc_viterbi = viterbi_correct / total_words
         ### END YOUR CODE
@@ -213,6 +224,18 @@ def memm_eval(test_data, logreg, vec, index_to_tag_dict):
             print str.format("Sentence index: {} greedy_acc: {}    Viterbi_acc:{} , elapsed: {} ", str(i),
                              str(acc_greedy), str(acc_viterbi), str(eval_end_timer - eval_start_timer))
             eval_start_timer = time.time()
+
+    # Mistakes log:
+    print "Mistakes log:"
+    print "-------------"
+    for mistake in mistakes:
+        index = mistake[0]
+        comparisons = mistake[1]
+        sentence = [w for (w, t) in test_data[index]]
+        print "Sentence: " + str(sentence)
+        for comp in comparisons:
+            print "real value: " + str(comp[0])
+            print "viterbi: " + str(comp[1])
 
     return str(acc_viterbi), str(acc_greedy)
 
