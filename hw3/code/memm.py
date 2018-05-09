@@ -6,6 +6,8 @@ from submitters_details import get_details
 
 import numpy as np
 from itertools import product
+import os.path
+import pickle
 
 # For the sake of optimization
 _S_ = {}
@@ -304,14 +306,22 @@ if __name__ == "__main__":
     dev_examples_vectorized = all_examples_vectorized[num_train_examples:]
     print "Done"
 
-    logreg = linear_model.LogisticRegression(
-        multi_class='multinomial', max_iter=128, solver='lbfgs', C=1, verbose=1, n_jobs=4)
-    print "Fitting..."
-    start = time.time()
-    logreg.fit(train_examples_vectorized, train_labels)
-    end = time.time()
-    print "End training, elapsed " + str(end - start) + " seconds"
-    # End of log linear model training
+    # Use pickle to store existing logreg
+    filename = 'logreg.sav'
+    logreg = None
+    if os.path.isfile(filename):
+        print "Fitting..."
+        logreg = pickle.load(open(filename, 'rb'))
+    else:
+        logreg = linear_model.LogisticRegression(
+            multi_class='multinomial', max_iter=128, solver='lbfgs', C=1, verbose=1, n_jobs=4)
+        print "Fitting..."
+        start = time.time()
+        model = logreg.fit(train_examples_vectorized, train_labels)
+        end = time.time()
+        print "End training, elapsed " + str(end - start) + " seconds"
+        pickle.dump(model, open(filename, 'wb'))
+        # End of log linear model training
 
     # Evaluation code - do not make any changes
     start = time.time()
