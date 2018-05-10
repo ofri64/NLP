@@ -228,16 +228,16 @@ def memm_eval(test_data, logreg, vec, index_to_tag_dict):
             eval_start_timer = time.time()
 
     # Mistakes log:
-    print "Mistakes log:"
-    print "-------------"
-    for mistake in mistakes:
-        index = mistake[0]
-        comparisons = mistake[1]
-        sentence = [w for (w, t) in test_data[index]]
-        print "Sentence: " + str(sentence)
-        for comp in comparisons:
-            print "real value: " + str(comp[0])
-            print "viterbi: " + str(comp[1])
+    # print "Mistakes log:"
+    # print "-------------"
+    # for mistake in mistakes:
+    #     index = mistake[0]
+    #     comparisons = mistake[1]
+    #     sentence = [w for (w, t) in test_data[index]]
+    #     print "Sentence: " + str(sentence)
+    #     for comp in comparisons:
+    #         print "real value: " + str(comp[0])
+    #         print "viterbi: " + str(comp[1])
 
     return str(acc_viterbi), str(acc_greedy)
 
@@ -314,7 +314,7 @@ if __name__ == "__main__":
         logreg = pickle.load(open(filename, 'rb'))
     else:
         logreg = linear_model.LogisticRegression(
-            multi_class='multinomial', max_iter=128, solver='lbfgs', C=1, verbose=1, n_jobs=4)
+            multi_class='multinomial', max_iter=128, solver='lbfgs', C=1, verbose=1)
         print "Fitting..."
         start = time.time()
         model = logreg.fit(train_examples_vectorized, train_labels)
