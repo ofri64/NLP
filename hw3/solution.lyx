@@ -2749,7 +2749,7 @@ status open
 
 $ 
 \backslash
-lambda_1 = 0.9 
+lambda_1 = 0.9 , 
 \backslash
 lambda_2 = 0 , 
 \backslash
@@ -2759,10 +2759,69 @@ lambda_3 = 0.1 $
 \end_inset
 
 
+\begin_inset Newline newline
+\end_inset
+
+Our pruning policy works as follows: on hmm_train we construct the emission
+ tag count dictionary.
+ For each encountered word in the sentence we hold the list of associated
+ tags.
+ Now, in test time we use this dictionary to only iterate over associated
+ tags which we saw in training time.
 \end_layout
 
 \begin_layout Section*
 Question 4
+\end_layout
+
+\begin_layout Description
+(c) We made the following optimizations in order to make Viterbi evaluation
+ work faster:
+\begin_inset Newline newline
+\end_inset
+
+- In training time, we maintain a dictionary 
+\series bold
+S
+\series default
+ where each encountered word points to a list of tags which it was associated
+ with.
+ Then in test time, we only evaluate 
+\series bold
+u, t 
+\series default
+such that appear in the dictionary and so we do not run over the whole tag
+ set.
+\begin_inset Newline newline
+\end_inset
+
+- We perform only 
+\series bold
+one
+\series default
+ logistic regression prediction per word in sentence
+\series bold
+ k
+\series default
+ with a matrix that contains all relevant 
+\series bold
+u, t
+\series default
+.
+ This way we take advantage of a prediction in a parallel fashion in sci-kit
+ implementation.
+\begin_inset Newline newline
+\end_inset
+
+- Finally, we use 
+\series bold
+vec.transform
+\series default
+ parallel implementation for all relevant 
+\series bold
+u, t
+\series default
+ instead of extracting features one by one.
 \end_layout
 
 \begin_layout Description
