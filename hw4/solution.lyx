@@ -579,7 +579,145 @@ We can infer from the confusion matrix that the model has difficulties to
 \end_layout
 
 \begin_layout Description
-(1) 
+(1) We used a window of size 1, which does not capture long-term contexts
+ between words.
+ As we seen in (b.ii), the computational complexity depends on the window
+ size so a bigger window may increase heavily the training and testing time.
+\end_layout
+
+\begin_layout Description
+(2) Our model depends only on words inside the window, and does not take
+ into account other potentially indicative information in the sentence to
+ encode as features.
+ Indicative information may be the structure of a word (upper-case letters,
+ suffixes etc.), previous tags and more.
+ (Things we talked about in the log linear models for tagging classes)
+\end_layout
+
+\begin_layout Description
+(example) In 
+\begin_inset Quotes eld
+\end_inset
+
+My girls' names are Dana, Dina and Donna
+\begin_inset Quotes erd
+\end_inset
+
+, the model predicted successfully that Dana and Dina are persons, but Donna
+ was identified as organization.
+ This supports the limitation of the window of size 1 and that it does not
+ look on previous tags.
+ We believe that if when predicting the tag for 
+\begin_inset Quotes eld
+\end_inset
+
+Donna
+\begin_inset Quotes erd
+\end_inset
+
+ the model could have used the information about the previous two PER tags
+ - it might have been predicting also 
+\begin_inset Quotes eld
+\end_inset
+
+Donna
+\begin_inset Quotes erd
+\end_inset
+
+ as a PER.
+\end_layout
+
+\begin_layout Section*
+Question 2
+\end_layout
+
+\begin_layout Description
+(a.i) Number of parameters for the RNN model: 
+\begin_inset Formula $VD+H^{2}+DH+H+HC+C$
+\end_inset
+
+
+\begin_inset Newline newline
+\end_inset
+
+Number of parameters for the window-based model: 
+\begin_inset Formula $VD+(2w+1)DH+H+HC+C$
+\end_inset
+
+
+\begin_inset Newline newline
+\end_inset
+
+Thus, the difference between the models is the difference between 
+\begin_inset Formula $H^{2}+DH$
+\end_inset
+
+ and 
+\begin_inset Formula $(2w+1)DH$
+\end_inset
+
+.
+ i.e it dependes on the window size 
+\begin_inset Formula $w$
+\end_inset
+
+ (RNN will have more parameters when 
+\begin_inset Formula $\frac{H}{2D}>w$
+\end_inset
+
+)
+\end_layout
+
+\begin_layout Description
+(a.ii) Computing 
+\begin_inset Formula $\mathbf{e}^{(t)}$
+\end_inset
+
+costs 
+\begin_inset Formula $O\left(D\right)$
+\end_inset
+
+, computing 
+\begin_inset Formula $\mathbf{h}^{(t)}$
+\end_inset
+
+costs 
+\begin_inset Formula $O\left(DH+H^{2}\right)$
+\end_inset
+
+, computing 
+\begin_inset Formula $\mathbf{\hat{y}}^{(t)}$
+\end_inset
+
+ costs 
+\begin_inset Formula $O(HC+C)$
+\end_inset
+
+.
+ Overall, it costs 
+\begin_inset Formula $O\left(TH\left(D+H+C\right)\right)$
+\end_inset
+
+ to predict lables for a sentence of size 
+\begin_inset Formula $T$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Description
+(b.ii) It is difficult to directly optimize F1 score because it considers
+ two distinct scores - the precision and the recall (F1 is the harmonic
+ mean between them).
+ Moreover, the two scores have a tradeoff between them - usually increaing
+ one will result in decreasing the other (within the same model).
+\end_layout
+
+\begin_layout Description
+(d) If we did not use masking, the loss can only get larger, and the gradient
+ may point to a direction which is not in our interests, because it takes
+ into consideration the padded dimensions.
+ The masking solves the problem as it ignores the loss in the padded directions.
 \end_layout
 
 \end_body
