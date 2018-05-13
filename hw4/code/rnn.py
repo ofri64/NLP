@@ -278,7 +278,7 @@ class RNNModel(NERModel):
                 ### YOUR CODE HERE (~6-10 lines)
                 if time_step > 0:
                     tf.get_variable_scope().reuse_variables()
-                o_t, h = cell(x[:,time_step, :], h)
+                o_t, h = cell(x[:, time_step, :], h)
                 o_drop_t = tf.nn.dropout(o_t, dropout_rate)
                 y_t = tf.matmul(o_drop_t, U) + b2
                 preds.append(y_t)
@@ -287,7 +287,6 @@ class RNNModel(NERModel):
         # Make sure to reshape @preds here.
         ### YOUR CODE HERE (~2-4 lines)
         preds = tf.stack(preds, axis=1)
-        # preds = tf.reshape(preds, [-1, self.config.batch_size, self.max_length * self.config.n_classes])
         ### END YOUR CODE
 
         return preds
@@ -311,7 +310,16 @@ class RNNModel(NERModel):
             pred: tf.Tensor of shape (batch_size, max_length, n_classes)
         """
         ### YOUR CODE HERE (~4-6 lines)
+        rnn_cell = tf.contrib.rnn.GRUCell(num_units=self.config.hidden_size,
+                                          kernel_initializer=tf.contrib.layers.xavier_initializer(),
+                                          bias_initializer=tf.constant_initializer())
+        rnn_cell = tf.contrib.rnn.DropoutWrapper(rnn_cell, input_keep_prob=dropout_rate)
+        rnn_outputs, _ = tf.nn.dynamic_rnn(rnn_cell, x, dtype=tf.float32)
 
+        preds = tf.layers.dense(rnn_outputs,
+                                units=self.config.n_classes,
+                                kernel_initializer=tf.contrib.layers.xavier_initializer(),
+                                bias_initializer=tf.constant_initializer())
         ### END YOUR CODE
 
         return preds
@@ -354,9 +362,10 @@ class RNNModel(NERModel):
             loss: A 0-d tensor (scalar)
         """
         ### YOUR CODE HERE (~2-4 lines)
-        batch_loss = tf.nn.sparse_softmax_cross_entropy_with_logits(labels=tf.boolean_mask(self.labels_placeholder, self.mask_placeholder),
-                                                                    logits=tf.boolean_mask(preds, self.mask_placeholder),
-                                                                    name='batch_loss')
+        batch_loss = tf.nn.sparse_softmax_cross_entropy_with_logits(
+            labels=tf.boolean_mask(self.labels_placeholder, self.mask_placeholder),
+            logits=tf.boolean_mask(preds, self.mask_placeholder),
+            name='batch_loss')
         loss = tf.reduce_mean(batch_loss)
         ### END YOUR CODE
         return loss
@@ -417,7 +426,16 @@ class RNNModel(NERModel):
         records = []
 
         ### YOUR CODE HERE (~5-10 lines)
+        _pred = tf.boolean_mask(pred, self.mask_placeholder)
 
+        records.append(tf.summary.histogram(name='pred', values=_pred))
+        records.append(tf.summary.scalar(name='loss', tensor=loss))
+
+        self.probs = tf.nn.softmax(_pred)
+        y = self.probs
+        clipped_y = tf.clip_by_value(self.probs, clip_value_min=1e-10, clip_value_max=1.0)
+        entropy = -tf.reduce_sum(y * tf.log(clipped_y))
+        records.append(tf.summary.scalar(name='entropy', tensor=entropy))
         ### END YOUR CODE
 
         assert hasattr(self, 'probs'), "self.probs should be set."
