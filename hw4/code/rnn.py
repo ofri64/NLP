@@ -287,6 +287,7 @@ class RNNModel(NERModel):
         # Make sure to reshape @preds here.
         ### YOUR CODE HERE (~2-4 lines)
         preds = tf.stack(preds, axis=1)
+        preds = tf.reshape(preds, [-1, self.max_length, self.config.n_classes])
         ### END YOUR CODE
 
         return preds

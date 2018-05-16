@@ -1,5 +1,5 @@
-#LyX 2.2 created this file. For more info see http://www.lyx.org/
-\lyxformat 508
+#LyX 2.3 created this file. For more info see http://www.lyx.org/
+\lyxformat 544
 \begin_document
 \begin_header
 \save_transient_properties true
@@ -21,6 +21,8 @@
 \font_osf false
 \font_sf_scale 100 100
 \font_tt_scale 100 100
+\use_microtype false
+\use_dash_ligatures true
 \graphics default
 \default_output_format default
 \output_sync 0
@@ -49,6 +51,7 @@
 \suppress_date false
 \justification true
 \use_refstyle 1
+\use_minted 0
 \index Index
 \shortcut idx
 \color #008000
@@ -57,7 +60,10 @@
 \tocdepth 3
 \paragraph_separation indent
 \paragraph_indentation default
-\quotes_language english
+\is_math_indent 0
+\math_numbering_side default
+\quotes_style english
+\dynamic_quotes 0
 \papercolumns 1
 \papersides 1
 \paperpagestyle default
@@ -112,7 +118,7 @@ Question 1
 
 \begin_layout Description
 (2) Michael Jordan is considered the best basketball player of all time.
- (Jordan maybe the country)
+ (Jordan maybe the country, the previous word is the key here)
 \end_layout
 
 \begin_layout Description
@@ -570,8 +576,18 @@ O
 
 We can infer from the confusion matrix that the model has difficulties to
  distinguish between LOC and ORG.
- Moreover, the model has difficulties to identify ORG in general - we can
+\begin_inset Newline newline
+\end_inset
+
+Moreover, the model has difficulties to identify ORG in general - we can
  see that from the matching row in the confusion matrix.
+ 
+\begin_inset Newline newline
+\end_inset
+
+The rows in the confusion matrix are the true labels while the columns are
+ the predicted ones - meaning large number of mistake in ORG row will result
+ in low recall for this label.
 \end_layout
 
 \begin_layout Description
@@ -595,7 +611,11 @@ We can infer from the confusion matrix that the model has difficulties to
 \end_layout
 
 \begin_layout Description
-(example) In 
+(examples) 
+\end_layout
+
+\begin_layout Enumerate
+In 
 \begin_inset Quotes eld
 \end_inset
 
@@ -625,6 +645,43 @@ Donna
 \end_inset
 
  as a PER.
+\end_layout
+
+\begin_layout Enumerate
+Another example could be 
+\begin_inset Quotes eld
+\end_inset
+
+My best friend's name is Jordan
+\begin_inset Quotes erd
+\end_inset
+
+.
+\begin_inset Newline newline
+\end_inset
+
+The model tagges 
+\begin_inset Quotes eld
+\end_inset
+
+Jordan
+\begin_inset Quotes erd
+\end_inset
+
+ as LOC beacuse it only has information about the previous word 
+\begin_inset Quotes eld
+\end_inset
+
+is
+\begin_inset Quotes erd
+\end_inset
+
+.
+\begin_inset Newline newline
+\end_inset
+
+We believe that increasing the window size even to 2-4 words could probably
+ make the model overcome this adversary example.
 \end_layout
 
 \begin_layout Section*
@@ -706,18 +763,163 @@ costs
 \end_layout
 
 \begin_layout Description
-(b.ii) It is difficult to directly optimize F1 score because it considers
- two distinct scores - the precision and the recall (F1 is the harmonic
- mean between them).
- Moreover, the two scores have a tradeoff between them - usually increaing
- one will result in decreasing the other (within the same model).
+(b.i) 
 \end_layout
 
 \begin_layout Description
-(d) If we did not use masking, the loss can only get larger, and the gradient
+(b.ii) It is difficult to directly optimize F1 score because it is non-convex,
+ and worse than that, not even differentiable.
+ That is wy we are usind the cross-entropy loss as a surrogate/approximation
+ function that is closed to the F1 score we really want to minimize (Although
+ it is not always the case as seen in the previous section).
+ 
+\end_layout
+
+\begin_layout Description
+(d.i) If we did not use masking, the loss can only get larger, and the gradient
  may point to a direction which is not in our interests, because it takes
  into consideration the padded dimensions.
  The masking solves the problem as it ignores the loss in the padded directions.
+\end_layout
+
+\begin_layout Description
+(g.i) Two modeling limitation of the RNN model:
+\end_layout
+
+\begin_layout Enumerate
+One limitation of this model is that although it considers the entire sentence,
+ it consideres only the words themselves without any other potentially indecativ
+e features of the words or the entire sentence.
+\begin_inset Newline newline
+\end_inset
+
+As a supporting example, we can see the following sentence from the development
+ set: "'We had two very strong economic reports', said David Shulman , Salomon
+ Bros
+\begin_inset Quotes erd
+\end_inset
+
+.
+\begin_inset Newline newline
+\end_inset
+
+The word 
+\begin_inset Quotes eld
+\end_inset
+
+Bros
+\begin_inset Quotes erd
+\end_inset
+
+ was tagged as PER instead of ORG.
+ It is reasonable to believe that considering the predicted tags for the
+ previous words 
+\begin_inset Quotes eld
+\end_inset
+
+David Shulman
+\begin_inset Quotes erd
+\end_inset
+
+ (which were tagged correctly as PER) and the preticted tag for the word
+ 
+\begin_inset Quotes eld
+\end_inset
+
+Salomon
+\begin_inset Quotes erd
+\end_inset
+
+ (which was tagged correctly as ORG), could have help the model to infer
+ that it is indeed more reasonable to tag 
+\begin_inset Quotes eld
+\end_inset
+
+Bros
+\begin_inset Quotes erd
+\end_inset
+
+ as ORG rather than PER.
+\end_layout
+
+\begin_layout Enumerate
+The model only uses past parts of the sentence.
+ But, we are examining the entire sentence at once and our goal is to predict
+ NER for the entire sentence (sequence to sequence).
+ So, there isn't really a limitation to use only past parts of the sentence
+ and not to use also later parts of the sentence, like we actually did with
+ the window tagger.
+ 
+\begin_inset Newline newline
+\end_inset
+
+As a supporting example, we can see the following sentence from the development
+ set: 
+\begin_inset Quotes eld
+\end_inset
+
+I will in fact move to Kecskemet ( site of Petofi printing house )
+\begin_inset Quotes erd
+\end_inset
+
+.
+\begin_inset Newline newline
+\end_inset
+
+The word 
+\begin_inset Quotes eld
+\end_inset
+
+Petofi
+\begin_inset Quotes erd
+\end_inset
+
+ was tagged as LOC instead of ORG.
+ It is reasonable to believe that using the two words that comes after 
+\begin_inset Quotes eld
+\end_inset
+
+Petofi
+\begin_inset Quotes erd
+\end_inset
+
+ - 
+\begin_inset Quotes eld
+\end_inset
+
+printing house
+\begin_inset Quotes erd
+\end_inset
+
+, the model could have concluded that 
+\begin_inset Quotes eld
+\end_inset
+
+Petofi
+\begin_inset Quotes erd
+\end_inset
+
+ is indeed an ORG rather than LOC.
+\end_layout
+
+\begin_layout Description
+(g.ii) Suggested extentions for the model:
+\end_layout
+
+\begin_layout Enumerate
+We can use features rich models that takes into account also things like
+ previous tagging decisions, the length of the current word, does the current
+ word consists only of captial letters, etc.
+ Similar to what we did with log linear models for POS tagging in class.
+\end_layout
+
+\begin_layout Enumerate
+In order to use later parts of the sentence, we can also roll them through
+ the network similar to the way we are rolling past parts of the sentence.
+\begin_inset Newline newline
+\end_inset
+
+One example of an implementation of this kind of approch is Bi-LSTM networks.
 \end_layout
 
 \end_body

@@ -1,0 +1,724 @@
+#LyX 2.2 created this file. For more info see http://www.lyx.org/
+\lyxformat 508
+\begin_document
+\begin_header
+\save_transient_properties true
+\origin unavailable
+\textclass article
+\use_default_options true
+\maintain_unincluded_children false
+\language english
+\language_package default
+\inputencoding auto
+\fontencoding global
+\font_roman "default" "default"
+\font_sans "default" "default"
+\font_typewriter "default" "default"
+\font_math "auto" "auto"
+\font_default_family default
+\use_non_tex_fonts false
+\font_sc false
+\font_osf false
+\font_sf_scale 100 100
+\font_tt_scale 100 100
+\graphics default
+\default_output_format default
+\output_sync 0
+\bibtex_command default
+\index_command default
+\paperfontsize default
+\use_hyperref false
+\papersize default
+\use_geometry false
+\use_package amsmath 1
+\use_package amssymb 1
+\use_package cancel 1
+\use_package esint 1
+\use_package mathdots 1
+\use_package mathtools 1
+\use_package mhchem 1
+\use_package stackrel 1
+\use_package stmaryrd 1
+\use_package undertilde 1
+\cite_engine basic
+\cite_engine_type default
+\biblio_style plain
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date false
+\justification true
+\use_refstyle 1
+\index Index
+\shortcut idx
+\color #008000
+\end_index
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\paragraph_indentation default
+\quotes_language english
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\end_header
+
+\begin_body
+
+\begin_layout Title
+ADVANCED METHODS IN NLP 
+\begin_inset Newline newline
+\end_inset
+
+EXERCISE #4 SOLUTION
+\end_layout
+
+\begin_layout Author
+Uri Avron [uriavron@gmail.com] [308046994]
+\begin_inset Newline newline
+\end_inset
+
+Ofri Kleinfeld [ofrik@mail.tau.ac.il] [302893680]
+\begin_inset Newline newline
+\end_inset
+
+Ido Calman [calman.ido@gmail.com] [308353499]
+\end_layout
+
+\begin_layout Section*
+\begin_inset Newpage newpage
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section*
+Question 1 
+\end_layout
+
+\begin_layout Description
+(a.i) 
+\end_layout
+
+\begin_layout Description
+(1) Georgia is so beautiful.
+ (Georgia may be either the state (location) or a person)
+\end_layout
+
+\begin_layout Description
+(2) Michael Jordan is considered the best basketball player of all time.
+ (Jordan maybe the country)
+\end_layout
+
+\begin_layout Description
+(a.ii) It is important to use features apart from the word itself because
+ the context is relevant, as we see in the two examples above.
+\end_layout
+
+\begin_layout Description
+(a.iii) 
+\end_layout
+
+\begin_layout Description
+(1) The words around the current word.
+\end_layout
+
+\begin_layout Description
+(2) The structure of the word (i.e.
+ ends with a dot, all upper-case)
+\end_layout
+
+\begin_layout Description
+(b.i) 
+\begin_inset Formula $\mathbf{e}^{(t)}$
+\end_inset
+
+is 
+\begin_inset Formula $1\times(2w+1)D$
+\end_inset
+
+, 
+\begin_inset Formula $W$
+\end_inset
+
+ is 
+\begin_inset Formula $(2w+1)D\times H$
+\end_inset
+
+, 
+\begin_inset Formula $U$
+\end_inset
+
+ is 
+\begin_inset Formula $H\times C$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Description
+(b.ii) Computing 
+\begin_inset Formula $\mathbf{e}^{(t)}$
+\end_inset
+
+costs 
+\begin_inset Formula $O\left((2w+1)D\right)$
+\end_inset
+
+, computing 
+\begin_inset Formula $\mathbf{h}^{(t)}$
+\end_inset
+
+costs 
+\begin_inset Formula $O\left((2w+1)DH\right)$
+\end_inset
+
+, computing 
+\begin_inset Formula $\mathbf{\hat{y}}^{(t)}$
+\end_inset
+
+ costs 
+\begin_inset Formula $O(HC)$
+\end_inset
+
+.
+ Overall, it costs 
+\begin_inset Formula $O\left(T\left((2w+1)D+(2w+1)DH+HC\right)\right)$
+\end_inset
+
+ to predict lables for a sentence of size 
+\begin_inset Formula $T$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Description
+(d.i) Best
+\begin_inset Formula $F_{1}$
+\end_inset
+
+ score is 
+\begin_inset Formula $0.82$
+\end_inset
+
+.
+ The token-level confusion matrix is
+\begin_inset Newline newline
+\end_inset
+
+
+\begin_inset Tabular
+<lyxtabular version="3" rows="6" columns="6">
+<features tabularvalignment="middle">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+go
+\backslash
+gu
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+PER
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+ORG
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+LOC
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+MISC
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+O
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+PER
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+2911
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+67
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+82
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+14
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+75
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+ORG
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+117
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+1685
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+98
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+63
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+129
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+LOC
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+32
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+178
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+1817
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+26
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+41
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+MISC
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+28
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+87
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+31
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+1010
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+112
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+O
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+30
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+51
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+17
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+30
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+42631
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\begin_inset Newline newline
+\end_inset
+
+We can infer from the confusion matrix that the model has difficulties to
+ distinguish between LOC and ORG.
+ Moreover, the model has difficulties to identify ORG in general - we can
+ see that from the matching row in the confusion matrix.
+\end_layout
+
+\begin_layout Description
+(d.ii)
+\end_layout
+
+\begin_layout Description
+(1) We used a window of size 1, which does not capture long-term contexts
+ between words.
+ As we seen in (b.ii), the computational complexity depends on the window
+ size so a bigger window may increase heavily the training and testing time.
+\end_layout
+
+\begin_layout Description
+(2) Our model depends only on words inside the window, and does not take
+ into account other potentially indicative information in the sentence to
+ encode as features.
+ Indicative information may be the structure of a word (upper-case letters,
+ suffixes etc.), previous tags and more.
+ (Things we talked about in the log linear models for tagging classes)
+\end_layout
+
+\begin_layout Description
+(example) In 
+\begin_inset Quotes eld
+\end_inset
+
+My girls' names are Dana, Dina and Donna
+\begin_inset Quotes erd
+\end_inset
+
+, the model predicted successfully that Dana and Dina are persons, but Donna
+ was identified as organization.
+ This supports the limitation of the window of size 1 and that it does not
+ look on previous tags.
+ We believe that if when predicting the tag for 
+\begin_inset Quotes eld
+\end_inset
+
+Donna
+\begin_inset Quotes erd
+\end_inset
+
+ the model could have used the information about the previous two PER tags
+ - it might have been predicting also 
+\begin_inset Quotes eld
+\end_inset
+
+Donna
+\begin_inset Quotes erd
+\end_inset
+
+ as a PER.
+\end_layout
+
+\begin_layout Section*
+Question 2
+\end_layout
+
+\begin_layout Description
+(a.i) Number of parameters for the RNN model: 
+\begin_inset Formula $VD+H^{2}+DH+H+HC+C$
+\end_inset
+
+
+\begin_inset Newline newline
+\end_inset
+
+Number of parameters for the window-based model: 
+\begin_inset Formula $VD+(2w+1)DH+H+HC+C$
+\end_inset
+
+
+\begin_inset Newline newline
+\end_inset
+
+Thus, the difference between the models is the difference between 
+\begin_inset Formula $H^{2}+DH$
+\end_inset
+
+ and 
+\begin_inset Formula $(2w+1)DH$
+\end_inset
+
+.
+ i.e it dependes on the window size 
+\begin_inset Formula $w$
+\end_inset
+
+ (RNN will have more parameters when 
+\begin_inset Formula $\frac{H}{2D}>w$
+\end_inset
+
+)
+\end_layout
+
+\begin_layout Description
+(a.ii) Computing 
+\begin_inset Formula $\mathbf{e}^{(t)}$
+\end_inset
+
+costs 
+\begin_inset Formula $O\left(D\right)$
+\end_inset
+
+, computing 
+\begin_inset Formula $\mathbf{h}^{(t)}$
+\end_inset
+
+costs 
+\begin_inset Formula $O\left(DH+H^{2}\right)$
+\end_inset
+
+, computing 
+\begin_inset Formula $\mathbf{\hat{y}}^{(t)}$
+\end_inset
+
+ costs 
+\begin_inset Formula $O(HC+C)$
+\end_inset
+
+.
+ Overall, it costs 
+\begin_inset Formula $O\left(TH\left(D+H+C\right)\right)$
+\end_inset
+
+ to predict lables for a sentence of size 
+\begin_inset Formula $T$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Description
+(b.ii) It is difficult to directly optimize F1 score because it considers
+ two distinct scores - the precision and the recall (F1 is the harmonic
+ mean between them).
+ Moreover, the two scores have a tradeoff between them - usually increaing
+ one will result in decreasing the other (within the same model).
+\end_layout
+
+\begin_layout Description
+(d) If we did not use masking, the loss can only get larger, and the gradient
+ may point to a direction which is not in our interests, because it takes
+ into consideration the padded dimensions.
+ The masking solves the problem as it ignores the loss in the padded directions.
+\end_layout
+
+\end_body
+\end_document
