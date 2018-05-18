@@ -919,7 +919,107 @@ In order to use later parts of the sentence, we can also roll them through
 \begin_inset Newline newline
 \end_inset
 
-One example of implementation of this kind of approch is Bi-LSTM networks.
+One example of an implementation of this kind of approch is Bi-LSTM networks.
+\end_layout
+
+\begin_layout Section*
+Question 3
+\end_layout
+
+\begin_layout Description
+(c.i) The maximun entropy value possible for a single timestamp prediction
+ is 
+\begin_inset Formula $\ln(C)$
+\end_inset
+
+, where C is the number of classes available for prediction.
+\begin_inset Newline newline
+\end_inset
+
+This follows the case where all the possible tages are equally probable.
+ Thus the entropy will be: 
+\begin_inset Formula $-\sum_{i=1}^{i=C}\frac{1}{C}\ln(\frac{1}{C})=-C\frac{1}{C}\ln(\frac{1}{C})=\ln(C)$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Description
+(c.ii) The average entorpy over time graph tells us how much our prediction
+ vector values are concentrated - as explained in previous section, when
+ all the vector entries are equally probable with get high entorpy value,
+ while when our ditribution mass is concentrated in only one entry we will
+ get entropy value of 0 which is the lowest possible value.
+ 
+\begin_inset Newline newline
+\end_inset
+
+The decrease in entropy over time ensures us that our prediction vectors
+ gets concentrated over one specific or few specific entries, together with
+ the decrease of the loss fucntion over time we can conclude that the prediction
+ vectors are getting concentrated over the 
+\series bold
+right vector entries 
+\series default
+(i.e the true class of the vector).
+\end_layout
+
+\begin_layout Description
+(d) The model predicts well the labels PER and LOC but struggles more with
+ ORG and MISC labels - as seen by the F1 scores for the last two labels.
+ (F1 score of 85% compared to 93% and 92% for PER and LOC).
+ The other possible tags are also being predicted well with more than 90%
+ F1 score.
+\begin_inset Newline newline
+\end_inset
+
+We can see that the model is still struggling to differentiate between some
+ of the labels where the rest of the sentence is highly indicative to the
+ current tagging decision.
+\begin_inset Newline newline
+\end_inset
+
+For example in: 
+\begin_inset Quotes eld
+\end_inset
+
+The Australian had upset Jansher 's rhythm with his mixture of gamesmanship
+ and fluent stroke-making but eventually succumbed 15-7 17-15 14-15 15-8
+\begin_inset Quotes erd
+\end_inset
+
+
+\begin_inset Newline newline
+\end_inset
+
+The model predicted 
+\begin_inset Quotes eld
+\end_inset
+
+Jansher
+\begin_inset Quotes erd
+\end_inset
+
+ as LOC instead of PER.
+ We believe that if the model could take into account the rest of the sentece,
+ even just the 
+\begin_inset Quotes eld
+\end_inset
+
+'s
+\begin_inset Quotes erd
+\end_inset
+
+ word (parsed as a different word because there is a space between them),
+ it would have tag 
+\begin_inset Quotes eld
+\end_inset
+
+Jansher
+\begin_inset Quotes erd
+\end_inset
+
+ as PER instead of LOC.
 \end_layout
 
 \end_body

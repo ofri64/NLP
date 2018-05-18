@@ -427,7 +427,8 @@ class RNNModel(NERModel):
         records = []
 
         ### YOUR CODE HERE (~5-10 lines)
-        _pred = tf.boolean_mask(pred, self.mask_placeholder)
+        # _pred = tf.boolean_mask(pred, self.mask_placeholder)
+        _pred = pred
 
         records.append(tf.summary.histogram(name='pred', values=_pred))
         records.append(tf.summary.scalar(name='loss', tensor=loss))
