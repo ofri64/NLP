@@ -427,15 +427,13 @@ class RNNModel(NERModel):
         records = []
 
         ### YOUR CODE HERE (~5-10 lines)
-        # _pred = tf.boolean_mask(pred, self.mask_placeholder)
-        _pred = pred
+        masked_pred = tf.boolean_mask(pred, self.mask_placeholder)
 
-        records.append(tf.summary.histogram(name='pred', values=_pred))
+        records.append(tf.summary.histogram(name='pred', values=masked_pred))
         records.append(tf.summary.scalar(name='loss', tensor=loss))
 
-        self.probs = tf.nn.softmax(_pred)
-        y = self.probs
-        clipped_y = tf.clip_by_value(self.probs, clip_value_min=1e-10, clip_value_max=1.0)
+        self.probs = y = tf.nn.softmax(pred)
+        clipped_y = tf.clip_by_value(y, clip_value_min=1e-10, clip_value_max=1.0)
         entropy = -tf.reduce_sum(y * tf.log(clipped_y))
         records.append(tf.summary.scalar(name='entropy', tensor=entropy))
         ### END YOUR CODE
