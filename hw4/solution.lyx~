@@ -597,7 +597,7 @@ The rows in the confusion matrix are the true labels while the columns are
 \begin_layout Description
 (1) We used a window of size 1, which does not capture long-term contexts
  between words.
- As we seen in (b.ii), the computational complexity depends on the window
+ As we described in (b.ii), the computational complexity depends on the window
  size so a bigger window may increase heavily the training and testing time.
 \end_layout
 
@@ -627,7 +627,7 @@ My girls' names are Dana, Dina and Donna
  was identified as organization.
  This supports the limitation of the window of size 1 and that it does not
  look on previous tags.
- We believe that if when predicting the tag for 
+ We believe that if while predicting the tag for 
 \begin_inset Quotes eld
 \end_inset
 
@@ -755,7 +755,7 @@ costs
 \begin_inset Formula $O\left(TH\left(D+H+C\right)\right)$
 \end_inset
 
- to predict lables for a sentence of size 
+ to predict lables for a sentence of length 
 \begin_inset Formula $T$
 \end_inset
 
@@ -763,13 +763,48 @@ costs
 \end_layout
 
 \begin_layout Description
-(b.i) 
+(b.i) We can consider an example scenario: 
+\begin_inset Newline newline
+\end_inset
+
+Trying to tag the following sentence: 
+\begin_inset Quotes eld
+\end_inset
+
+The/O kingdom/LOC palace/LOC
+\begin_inset Quotes erd
+\end_inset
+
+ and moving from initial tags 
+\begin_inset Quotes eld
+\end_inset
+
+The/O kingdom/O palace/O
+\begin_inset Quotes erd
+\end_inset
+
+ to the following decision - 
+\begin_inset Quotes eld
+\end_inset
+
+The/O kingdom/O palace/LOC
+\begin_inset Quotes erd
+\end_inset
+
+.
+\begin_inset Newline newline
+\end_inset
+
+We have decreased our cross entropy loss because we are tagging another
+ token correctly, but our entity level F1 score would also decrease because
+ now we have predicted another entity incorrectly (precision decreases and
+ recall remains the same)
 \end_layout
 
 \begin_layout Description
 (b.ii) It is difficult to directly optimize F1 score because it is non-convex,
  and worse than that, not even differentiable.
- That is wy we are usind the cross-entropy loss as a surrogate/approximation
+ That is why we are using the cross-entropy loss as a surrogate/approximation
  function that is closed to the F1 score we really want to minimize (Although
  it is not always the case as seen in the previous section).
  
@@ -788,7 +823,7 @@ costs
 
 \begin_layout Enumerate
 One limitation of this model is that although it considers the entire sentence,
- it consideres only the words themselves without any other potentially indecativ
+ it consideres only the words themselves without any other potentially indicativ
 e features of the words or the entire sentence.
 \begin_inset Newline newline
 \end_inset
@@ -847,8 +882,8 @@ The model only uses past parts of the sentence.
  But, we are examining the entire sentence at once and our goal is to predict
  NER for the entire sentence (sequence to sequence).
  So, there isn't really a limitation to use only past parts of the sentence
- and not to use also later parts of the sentence, like we actually did with
- the window tagger.
+ and not to icnlude also later parts of the sentence, like we actually did
+ with the window tagger.
  
 \begin_inset Newline newline
 \end_inset
@@ -907,7 +942,7 @@ Petofi
 \end_layout
 
 \begin_layout Enumerate
-We can use features rich models that takes into account also things like
+We can use feature rich models that takes into account also things like
  previous tagging decisions, the length of the current word, does the current
  word consists only of captial letters, etc.
  Similar to what we did with log linear models for POS tagging in class.
