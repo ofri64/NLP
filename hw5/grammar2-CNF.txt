@@ -175,10 +175,7 @@
 # Sentence (e)
 
 1	Verb    perplexed
-2 	Pron 	he
-2 	Pron 	she
 5 	Pron 	it
-1 	Pron 	they
 
 # Sentence (f)
 1   Very very
@@ -194,5 +191,3 @@
 
 # Sentece (i)
 1   PVerb   eating
-1   PVerb   making
-1   PVerb   holding
