@@ -73,7 +73,7 @@
 
 #####################################################
 
-# Preterminals CNF backward support
+# Preterminals CNF backward compatibility
 
 1 	Dot     .
 1   Punct   !
@@ -89,8 +89,9 @@
 # Basic grammar rules added
 
 # Sentence (a)
+#   ProperNoun = An entity that performs an action
 
-5 	S 	Noun VP
+5 	S 	ProperNoun VP
 
 # Sentence (b)
 # 	Conj = conjunctions (and, or)
@@ -121,13 +122,39 @@
 1 	Pron_Verb 	Pron Verb
 1 	NP_Comp_S 	NP Comp_S
 
+# Sentence (f)
+#   Very = the word "very". This could be classified as Adverb but we also use "very" as Adjective
+
+2   Adj    Very Adj
+
+# Sentence (g)
+#   PrepNP = An NP that comes after a preposition word
+
+3   VP  Verb PrepNP
+1   PrepNP  Prep NP
+
+# Sentence (h)
+#   Be = The formed verb "be". (for our purposes only "is")
+
+6   VP Be Adj
+
+# Sentence (i)
+#   PVerb = A verb in present form
+
+5   VP  Be PVerbNP
+1   PVerbNP   PVerb NP
+
+# Sentence (j)
+
+7   VP  Be NP
+
 #####################################################
 
 # Preterminals for new sentences grammar
 
 # Sentence (a)
 
-1 	Noun    Sally
+1 	ProperNoun     Sally
 
 # Sentence (b)
 
@@ -152,3 +179,20 @@
 2 	Pron 	she
 5 	Pron 	it
 1 	Pron 	they
+
+# Sentence (f)
+1   Very very
+
+# Senence (g)
+
+1   Noun proposal
+1   Noun desk
+
+# Sentence (h)
+1   Be  is
+1   Adj lazy
+
+# Sentece (i)
+1   PVerb   eating
+1   PVerb   making
+1   PVerb   holding
