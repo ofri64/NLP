@@ -299,5 +299,387 @@ every chief of staff under every sandwich wanted the pickle !
 
 \end_layout
 
+\begin_layout Section*
+Question 3
+\end_layout
+
+\begin_layout Standard
+(a) 
+\series bold
+General note
+\series default
+: more information appears in the grammar text file in comments.
+ We go over the main rules that make our grammar work with the provided
+ examples:
+\end_layout
+
+\begin_layout Standard
+(a) 
+\begin_inset Quotes eld
+\end_inset
+
+Sally
+\begin_inset Quotes erd
+\end_inset
+
+ is a proper noun (an entity) thus [
+\series bold
+S -> ProperNoun VP
+\series default
+] was added.
+ Proper Nouns are different than Nouns because 
+\begin_inset Quotes eld
+\end_inset
+
+the Sally
+\begin_inset Quotes erd
+\end_inset
+
+, for example, is incorrect.
+\end_layout
+
+\begin_layout Standard
+(b) Conjunctions (Conj) like 
+\begin_inset Quotes eld
+\end_inset
+
+and
+\begin_inset Quotes erd
+\end_inset
+
+, 
+\begin_inset Quotes eld
+\end_inset
+
+or
+\begin_inset Quotes erd
+\end_inset
+
+ were added and accordingly rules to connect two NP / VP with a conjunction
+ word in between.
+\end_layout
+
+\begin_layout Standard
+(c) Intransitive verbs (IVerb) are verbs that appear without an object afterward
+s.
+\end_layout
+
+\begin_layout Standard
+(d) Complementizer (Comp) was added for VP in the following way: [
+\series bold
+VP -> Verb Comp S
+\series default
+] so a full sentence S can be expressed after the verb and the word 
+\begin_inset Quotes eld
+\end_inset
+
+that
+\begin_inset Quotes erd
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+(e) Added Pronouns (Pron) like 
+\begin_inset Quotes eld
+\end_inset
+
+it
+\begin_inset Quotes erd
+\end_inset
+
+ and rules that allow the sentences of the form: 
+\begin_inset Quotes eld
+\end_inset
+
+it ...
+ that
+\begin_inset Quotes erd
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+(f) The word 
+\begin_inset Quotes eld
+\end_inset
+
+very
+\begin_inset Quotes erd
+\end_inset
+
+ is normally an adverb but for our case this is a quantifier for adjectives,
+ so a recursive rule [
+\series bold
+Adj -> Very Adj
+\series default
+] was added to support multiple 
+\begin_inset Quotes eld
+\end_inset
+
+very
+\begin_inset Quotes erd
+\end_inset
+
+s
+\end_layout
+
+\begin_layout Standard
+(g) Added [
+\series bold
+VP -> Verb Prep NP
+\series default
+] so a verb can be performed on an NP with a preposition word (with, on,
+ in, under) in between.
+\end_layout
+
+\begin_layout Standard
+(h) Added [
+\series bold
+VP -> Be Adj
+\series default
+] to express phrases like 
+\begin_inset Quotes eld
+\end_inset
+
+Sally is lazy
+\begin_inset Quotes erd
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+(i) Added (partial) support for Present Progressive with the rule [
+\series bold
+VP -> Be PVerb NP
+\series default
+] where PVerb is the verb in the PP form (eating).
+\end_layout
+
+\begin_layout Standard
+(j) The rule [
+\series bold
+VP -> Be NP
+\series default
+] expresses phrases like 
+\begin_inset Quotes eld
+\end_inset
+
+Sally is a sandwich
+\begin_inset Quotes erd
+\end_inset
+
+
+\begin_inset Newline newline
+\end_inset
+
+
+\begin_inset Newline newline
+\end_inset
+
+(b) 
+\series bold
+Relative Clauses
+\series default
+ have 2 different relations - The first is where the verb is relative: 
+\begin_inset Quotes eld
+\end_inset
+
+...
+ the president that 
+\series bold
+ate
+\series default
+ the sandwich
+\begin_inset Quotes erd
+\end_inset
+
+ so a rule [
+\series bold
+VP -> Verb NP Clause Comp VP
+\series default
+] was added.
+ The second is where the noun is the relative: 
+\begin_inset Quotes eld
+\end_inset
+
+the sandwich that 
+\series bold
+the president
+\series default
+ ate
+\begin_inset Quotes erd
+\end_inset
+
+so a rule [
+\series bold
+VP -> Verb NP Clause Comp NP
+\series default
+] was added.
+ Moreover, we allow some recursion to have consecutive 
+\begin_inset Quotes eld
+\end_inset
+
+that
+\begin_inset Quotes erd
+\end_inset
+
+s with a special non-terminal 
+\begin_inset Quotes eld
+\end_inset
+
+NPV
+\begin_inset Quotes erd
+\end_inset
+
+ which derives NP VP.
+ Then VP may again derive a relative clause and so on.
+\begin_inset Newline newline
+\end_inset
+
+
+\begin_inset Newline newline
+\end_inset
+
+
+\series bold
+Singular vs Plural
+\series default
+ was implemented with special two non-terminals: NPS and VPS.
+ We had to make another basic rule [
+\series bold
+S -> NPS VPS
+\series default
+] so we decide in the beginning of the derivation if the whole sentence
+ is plural or singular.
+ This way we know that no matter what NPS we derive, the verb would still
+ be in plural form.
+ This assures that we do 
+\series bold
+not 
+\series default
+derive sentences like 
+\begin_inset Quotes eld
+\end_inset
+
+Sally choose the president
+\begin_inset Quotes erd
+\end_inset
+
+ but we do support 
+\begin_inset Quotes eld
+\end_inset
+
+Sally and the citizens choose the president
+\begin_inset Quotes erd
+\end_inset
+
+.
+ 
+\begin_inset Newline newline
+\end_inset
+
+
+\begin_inset Newline newline
+\end_inset
+
+(c) Below are some examples of CKY parsing:
+\begin_inset Newline newline
+\end_inset
+
+
+\begin_inset Newline newline
+\end_inset
+
+Sally ate a sandwich .
+\begin_inset Newline newline
+\end_inset
+
+
+\begin_inset Newline newline
+\end_inset
+
+
+\series bold
+(ROOT (S (ProperNoun Sally) (VP (Verb ate) (NP (Det a) (Noun sandwich))))
+ (Dot .))
+\begin_inset Newline newline
+\end_inset
+
+
+\begin_inset Newline newline
+\end_inset
+
+
+\series default
+the citizens choose the president .
+\begin_inset Newline newline
+\end_inset
+
+
+\begin_inset Newline newline
+\end_inset
+
+
+\series bold
+(ROOT (S (NPS (Dets the) (Nouns citizens)) (VPS (Verbs choose) (NP (Det
+ the) (Noun president)))) (Dot .))
+\begin_inset Newline newline
+\end_inset
+
+
+\begin_inset Newline newline
+\end_inset
+
+
+\series default
+Sally is eating a sandwich .
+\begin_inset Newline newline
+\end_inset
+
+
+\begin_inset Newline newline
+\end_inset
+
+
+\series bold
+(ROOT (S (ProperNoun Sally) (VP (Be is) (PVerbNP (PVerb eating) (NP (Det
+ a) (Noun sandwich))))) (Dot .))
+\series default
+
+\begin_inset Newline newline
+\end_inset
+
+
+\begin_inset Newline newline
+\end_inset
+
+is it true that Sally thought that the chief of staff and the citizens choose
+ the president ?
+\begin_inset Newline newline
+\end_inset
+
+
+\begin_inset Newline newline
+\end_inset
+
+
+\series bold
+(ROOT (IsItTrueThatS (Is is) (ItTrueThatS (It it) (TrueThatS (True true)
+ (ThatS (That that) (S (ProperNoun Sally) (VP (Verb thought) (Comp_S (Comp
+ that) (S (NPS (NP (Det the) (Noun (Chief chief) (OfStaff (Of of) (Staff
+ staff)))) (ConjNP (Conj and) (NPS (Dets the) (Nouns citizens)))) (VPS (Verbs
+ choose) (NP (Det the) (Noun president))))))))))) (Question ?))
+\series default
+
+\begin_inset Newline newline
+\end_inset
+
+
+\end_layout
+
 \end_body
 \end_document
