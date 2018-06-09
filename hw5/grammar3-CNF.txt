@@ -150,7 +150,10 @@
 #   - PVerb = A verb in present form
 
 5   VP  Be PVerbNP
+1   VP  Be  PVerb
+1   VP  Be  PVerb_PrepNP
 1   PVerbNP   PVerb NP
+1   PVerb_PrepNP    PVerb PrepNP
 
 # Sentence (j)
 
@@ -228,7 +231,9 @@
 
 10   S   NPS VPS
 
-1   NPS  Dets Nouns
+1   NPS Dets Nouns
+1   NPS NP ConjNP
+
 1   NPS NPS PP
 1   PP  Prep NPS
 1   Nouns   Adj Nouns
@@ -249,3 +254,14 @@
 1   Verbs   choose
 1   Dets    the
 1   PSVerb  chooses
+
+# Unary rules for verbs (Sally ate.)
+
+1	VP	ate
+1	VP	wanted
+1	VP	kissed
+1	VP	understood
+1	VP	pickled
+1   VP  thought
+1   VP  worked
+1   VPS choose

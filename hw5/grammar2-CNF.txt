@@ -145,13 +145,16 @@
 # Sentence (h)
 #   - Be = The formed verb "be". (for our purposes only "is")
 
-6   VP Be Adj
+6   VP  Be Adj
 
 # Sentence (i)
 #   - PVerb = A verb in present form
 
 5   VP  Be PVerbNP
+1   VP  Be  PVerb
+1   VP  Be  PVerb_PrepNP
 1   PVerbNP   PVerb NP
+1   PVerb_PrepNP    PVerb PrepNP
 
 # Sentence (j)
 
