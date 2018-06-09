@@ -104,6 +104,9 @@
 # Sentence (b)
 # 	- Conj = conjunctions (and, or)
 
+1   Noun    Noun ConjNP
+1   ProperNoun  ProperNoun ConjNP
+1   ConjNP   Conj NP
 1   VP  Verb ConjVP
 1   ConjVP  Conj VP
 
@@ -124,6 +127,7 @@
 
 7 	S 	Pron_Verb NP_Comp_S
 1	VP  Verb Noun
+1   VP  Verb ProperNoun
 1 	Pron_Verb 	Pron Verb
 1 	NP_Comp_S 	NP Comp_S
 
@@ -181,12 +185,13 @@
 5 	Pron 	it
 
 # Sentence (f)
-1   Very very
+1   Very    very
 
 # Senence (g)
 
-1   Noun proposal
-1   Noun desk
+1   Noun    proposal
+1   Noun    desk
+1   Verb    worked
 
 # Sentence (h)
 1   Be  is
