@@ -114,7 +114,7 @@
 #   - IVerb = intransitive verb (disappeared, coughed, sighed)
 
 3	S 	NP IVerb
-1	S 	Noun IVerb
+1	S 	ProperNoun IVerb
 
 # Sentence (d)
 #   - Comp = complementizer - words that can be used to turn a clause into the subject or object of a sentence

@@ -114,7 +114,7 @@
 #   - IVerb = intransitive verb (disappeared, coughed, sighed)
 
 3	S 	NP IVerb
-1	S 	Noun IVerb
+1	S 	ProperNoun IVerb
 
 # Sentence (d)
 #   - Comp = complementizer - words that can be used to turn a clause into the subject or object of a sentence
@@ -254,14 +254,3 @@
 1   Verbs   choose
 1   Dets    the
 1   PSVerb  chooses
-
-# Unary rules for verbs (Sally ate.)
-
-1	VP	ate
-1	VP	wanted
-1	VP	kissed
-1	VP	understood
-1	VP	pickled
-1   VP  thought
-1   VP  worked
-1   VPS choose
