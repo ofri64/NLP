@@ -19,7 +19,7 @@
 
 # Rules for creating full sentences.
 
-100	ROOT	S Dot
+10	ROOT	S Dot
 1   ROOT    S Punct
 1   ROOT    IsItTrueThatS Question
 
@@ -58,7 +58,7 @@
 1	Noun	president
 1	Noun	sandwich
 1	Noun	pickle
-1   Noun    chief OfStaff
+1   Noun    Chief OfStaff
 1	Noun	floor
 
 1	Adj	fine
@@ -78,44 +78,49 @@
 1 	Dot     .
 1   Punct   !
 1   Question    ?
-1   IsItTrueThatS   is ItTrueThatS
-1   ItTrueThatS it TrueThatS
-1   TrueThatS true ThatS
-1   ThatS   that S
-1   OfStaff of staff
+1   IsItTrueThatS   Is ItTrueThatS
+1   ItTrueThatS It TrueThatS
+1   TrueThatS True ThatS
+1   ThatS   That S
+1   OfStaff Of Staff
+
+1   Is  is
+1   It  it
+1   True    true
+1   That    that
+1   Of  of
+1   Staff   staff
+1   Chief   chief
 
 #####################################################
 
 # Basic grammar rules added
 
 # Sentence (a)
-#   ProperNoun = An entity that performs an action
+#   - ProperNoun = An entity that performs an action
 
 5 	S 	ProperNoun VP
 
 # Sentence (b)
-# 	Conj = conjunctions (and, or)
+# 	- Conj = conjunctions (and, or)
 
-3 	S 	Noun_Conj_NP Verb_Conj_VP
-1 	Noun_Conj_NP 	Noun Conj_NP
-1 	Conj_NP 	Conj NP
-1 	Verb_Conj_VP 	Verb Conj_VP
-1 	Conj_VP 	Conj VP
+1   VP  Verb ConjVP
+1   ConjVP  Conj VP
 
 # Sentence (c)
-#   IVerb = intransitive verb (disappeared, coughed, sighed)
+#   - IVerb = intransitive verb (disappeared, coughed, sighed)
 
 3	S 	NP IVerb
 1	S 	Noun IVerb
 
 # Sentence (d)
-#   Comp = complementizer - words that can be used to turn a clause into the subject or object of a sentence
+#   - Comp = complementizer - words that can be used to turn a clause into the subject or object of a sentence
 
 3 	VP 	Verb Comp_S
 1 	Comp_S 	Comp S
 
 # Sentence (e)
-#   Pron = pronouns - refer back to people and things that we have already identified (he, she, it, they)
+#   - Pron = pronouns - refer back to people and things that we have already identified (he, she, it, they)
 
 7 	S 	Pron_Verb NP_Comp_S
 1	VP  Verb Noun
@@ -123,23 +128,23 @@
 1 	NP_Comp_S 	NP Comp_S
 
 # Sentence (f)
-#   Very = the word "very". This could be classified as Adverb but we also use "very" as Adjective
+#   - Very = the word "very". This could be classified as Adverb but we also use "very" as Adjective
 
 2   Adj    Very Adj
 
 # Sentence (g)
-#   PrepNP = An NP that comes after a preposition word
+#   - PrepNP = An NP that comes after a preposition word
 
 3   VP  Verb PrepNP
 1   PrepNP  Prep NP
 
 # Sentence (h)
-#   Be = The formed verb "be". (for our purposes only "is")
+#   - Be = The formed verb "be". (for our purposes only "is")
 
 6   VP Be Adj
 
 # Sentence (i)
-#   PVerb = A verb in present form
+#   - PVerb = A verb in present form
 
 5   VP  Be PVerbNP
 1   PVerbNP   PVerb NP
@@ -196,7 +201,7 @@
 # Relative clauses
 #   - NP_RelV = an NP that is realtive by verb (... that ate the sandwich)
 #   - NP_RelN = an NP that is relative by NP (... that the president ate)
-#     We allow a recursive NPV-> NP VP for concatenated clauses (...that the president thought that Sally ate)
+#     We allow a recursive NPV -> NP VP for concatenated clauses (...that the president thought that Sally ate)
 
 20  VP  Verb NP_RelV
 1   NP_RelV NP ClauseV
@@ -207,3 +212,36 @@
 1   ClauseN Comp NPV
 5   NPV NP Verb
 1   NPV NP VP
+
+#####################################################
+
+# Singular vs Plural
+#   - NPS/VPS = Noun Phrases and Verb Phrases in plural form
+#   - Nouns/Verbs = Noun and Verbs in plural form
+#   - PSVerb = Present Simple singular verb (chooses)
+#   - ConjNP = A conjunction of two NP/NPS
+#   - Dets = "the" since "a" and "every" cannot determine plural noun
+
+10   S   NPS VPS
+
+1   NPS  Dets Nouns
+1   NPS NPS PP
+1   PP  Prep NPS
+1   Nouns   Adj Nouns
+
+1   VPS Verbs NP
+1   VPS Verbs NPS
+1   VP  PSVerb  NP
+1   VP  PSVerb PrepNP
+1   VP  PSVerb ConjVP
+
+0.5   NPS NPS ConjNP
+0.5   ConjNP  Conj NPS
+0.5   ConjNP  Conj NP
+
+# Preterminals support for new words
+
+1   Nouns   citizens
+1   Verbs   choose
+1   Dets    the
+1   PSVerb  chooses
