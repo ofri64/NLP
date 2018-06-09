@@ -89,12 +89,12 @@
 # Basic grammar rules added
 
 # Sentence (a)
-#   ProperNoun = An entity that performs an action
+#   - ProperNoun = An entity that performs an action
 
 5 	S 	ProperNoun VP
 
 # Sentence (b)
-# 	Conj = conjunctions (and, or)
+# 	- Conj = conjunctions (and, or)
 
 3 	S 	Noun_Conj_NP Verb_Conj_VP
 1 	Noun_Conj_NP 	Noun Conj_NP
@@ -103,19 +103,19 @@
 1 	Conj_VP 	Conj VP
 
 # Sentence (c)
-#   IVerb = intransitive verb (disappeared, coughed, sighed)
+#   - IVerb = intransitive verb (disappeared, coughed, sighed)
 
 3	S 	NP IVerb
 1	S 	Noun IVerb
 
 # Sentence (d)
-#   Comp = complementizer - words that can be used to turn a clause into the subject or object of a sentence
+#   - Comp = complementizer - words that can be used to turn a clause into the subject or object of a sentence
 
 3 	VP 	Verb Comp_S
 1 	Comp_S 	Comp S
 
 # Sentence (e)
-#   Pron = pronouns - refer back to people and things that we have already identified (he, she, it, they)
+#   - Pron = pronouns - refer back to people and things that we have already identified (he, she, it, they)
 
 7 	S 	Pron_Verb NP_Comp_S
 1	VP  Verb Noun
@@ -123,23 +123,23 @@
 1 	NP_Comp_S 	NP Comp_S
 
 # Sentence (f)
-#   Very = the word "very". This could be classified as Adverb but we also use "very" as Adjective
+#   - Very = the word "very". This could be classified as Adverb but we also use "very" as Adjective
 
 2   Adj    Very Adj
 
 # Sentence (g)
-#   PrepNP = An NP that comes after a preposition word
+#   - PrepNP = An NP that comes after a preposition word
 
 3   VP  Verb PrepNP
 1   PrepNP  Prep NP
 
 # Sentence (h)
-#   Be = The formed verb "be". (for our purposes only "is")
+#   - Be = The formed verb "be". (for our purposes only "is")
 
 6   VP Be Adj
 
 # Sentence (i)
-#   PVerb = A verb in present form
+#   - PVerb = A verb in present form
 
 5   VP  Be PVerbNP
 1   PVerbNP   PVerb NP
