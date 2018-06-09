@@ -163,9 +163,7 @@
 
 # Sentence (c)
 
-1	IVerb 	sighed 
-1	IVerb 	coughed 
-1	IVerb 	disappeared 
+1	IVerb 	sighed
 
 # Sentence (d)
 
