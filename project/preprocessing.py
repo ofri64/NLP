@@ -137,6 +137,8 @@ def preprocess_dataset(dataset_path):
     word2idx = {w: idx for idx, (w, _) in enumerate(words.items())}
     tag2idx = {t: idx for idx, (t, _) in enumerate(tags.items())}
 
+    print(tag2idx)
+
     x = [[word2idx[w] for w, _ in sent] for sent in sents]
     y = [[tag2idx[t] for _, t in sent] for sent in sents]
 
@@ -160,9 +162,46 @@ def preprocess_dataset(dataset_path):
     # return x, y, vocab_size
 
 
-def load_data():
-    x_train, y_train, vocab_size, n_tags, max_length = preprocess_dataset(TRAIN_PATH)
-    x_test, y_test, _, _, _ = preprocess_dataset(TEST_PATH)
+def preprocess_datasets(train_path, test_path):
+    train_sents = read_conll_pos_file(train_path)
+    test_sents = read_conll_pos_file(test_path)
+    sents = train_sents + test_sents
 
-    return x_train, y_train, x_test, y_test, vocab_size, max_length, n_tags
+    words, tags = OrderedDict([]), OrderedDict([])
+    max_length = 0
+    for sent in sents:
+        max_length = max(max_length, len(sent))
+        for w, t in sent:
+            words[w] = words.get(w, 0) + 1
+            tags[t] = tags.get(t, 0) + 1
+
+    vocab_size = len(words.items())
+    n_tags = len(tags.items())
+
+    word2idx = {w: idx for idx, (w, _) in enumerate(words.items())}
+    tag2idx = {t: idx for idx, (t, _) in enumerate(tags.items())}
+
+    x_train = [[word2idx[w] for w, _ in sent] for sent in train_sents]
+    y_train = [[tag2idx[t] for _, t in sent] for sent in train_sents]
+
+    x_train = pad_sequences(maxlen=max_length, sequences=x_train, padding="post", value=vocab_size-1)
+    y_train = pad_sequences(maxlen=max_length, sequences=y_train, padding="post", value=tag2idx['#'])
+
+    y_train = [to_categorical(t, n_tags) for t in y_train]
+
+    x_test = [[word2idx[w] for w, _ in sent] for sent in test_sents]
+    y_test = [[tag2idx[t] for _, t in sent] for sent in test_sents]
+
+    x_test = pad_sequences(maxlen=max_length, sequences=x_test, padding="post", value=vocab_size-1)
+    y_test = pad_sequences(maxlen=max_length, sequences=y_test, padding="post", value=tag2idx['#'])
+
+    y_test = [to_categorical(t, n_tags) for t in y_test]
+
+    return x_train, np.array(y_train), x_test, np.array(y_test), vocab_size, n_tags, max_length
+
+
+def load_data():
+    x_train, y_train, x_test, y_test, vocab_size, n_tags, max_length = preprocess_datasets(TRAIN_PATH, TEST_PATH)
+
+    return x_train, y_train, x_test, y_test, vocab_size, n_tags, max_length
 
