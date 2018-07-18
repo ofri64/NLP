@@ -2,7 +2,7 @@ from DataProcessor import DataProcessor
 import requests
 
 from keras.models import Sequential
-from keras.layers import Dense, Activation, Embedding, LSTM, Dropout, TimeDistributed
+from keras.layers import Dense, Activation, Embedding, LSTM, Dropout, TimeDistributed, Bidirectional
 from keras.callbacks import Callback
 
 TRAIN_PATH = 'Penn_Treebank/train.gold.conll'
@@ -59,7 +59,7 @@ class POSLSTMModel(object):
     def build(self, optimizer='adam', metrics=['accuracy']):
         self.model = Sequential([Embedding(input_dim=self.vocab_size, output_dim=self.embed_size, input_length=self.max_input_length),
                                 Dropout(self.dropout_rate),
-                                LSTM(self.hidden_size, return_sequences=True),
+                                Bidirectional(LSTM(self.hidden_size, return_sequences=True)),
                                 TimeDistributed(Dense(self.n_classes)),
                                 Activation('softmax')])
 
