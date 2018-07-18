@@ -5,9 +5,9 @@ from keras.models import Sequential
 from keras.layers import Dense, Activation, Embedding, LSTM, Dropout, TimeDistributed
 from keras.callbacks import Callback
 
-remote = False
-stop_url = ''
-slack_url = ''
+remote = True
+stop_url = 'https://us-central1-deep-208318.cloudfunctions.net/stop-cs231'
+slack_url = 'https://us-central1-deep-208318.cloudfunctions.net/notify-slack'
 
 dropout = .5
 embed_size = 50
