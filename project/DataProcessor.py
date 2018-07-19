@@ -120,6 +120,18 @@ class DataProcessor(object):
 
         return tag_sample_one_hot
 
+    def create_boolean_mask(self, x_sample):
+        """
+        Create a boolean mask from a padded sequence
+        :param x_sample: padded sequence matrix of shape (total_samples, max_input_length)
+        :return: mask_sample: padded sequence of boolean values with shape (total_sample, max_input_length)
+        """
+        padding_idx = self.word2idx["PADD"]
+        padding_matrix = np.full(shape=(x_sample.shape[0], x_sample.shape[1]), fill_value=padding_idx)
+        boolean_mask = x_sample != padding_matrix
+
+        return boolean_mask
+
     def preprocess_train_set(self, train_path):
         """
         Processes a training set from a given file path and initiate the word2idx and

@@ -1,5 +1,6 @@
 import os
 import time
+import tensorflow as tf
 
 
 class TensorflowAbstractModel(object):
@@ -89,17 +90,18 @@ class TensorflowAbstractModel(object):
         :return: np.ndarray of shape (n_samples, n_classes)
         """
         feed_dict = self.create_feed_dict(input_batch, mask_batch)
-        predictions = session.run(self.prediction_variable_tensor, feed_dict=feed_dict)
+
+        # greedy tagger - returns max probability class
+        predictions = session.run(tf.argmax(self.prediction_variable_tensor, axis=2), feed_dict=feed_dict)
         return predictions
 
     @staticmethod
-    def get_save_path(model_prefix):
-        current_time_date = time.strftime("%x") + "-" + time.strftime("%X")
-        current_folder = os.curdir
-        save_folder = os.path.join(current_folder, current_time_date)
+    def define_saver_path(model_prefix):
+        current_time_date = time.strftime("%x").replace("/", "-") + "-" + time.strftime("%X")
+        current_folder = os.getcwd()
         model_prefix = model_prefix
+        save_folder = os.path.join(current_folder, model_prefix, current_time_date)
 
         # create directory
-        os.mkdir(save_folder)
-        save_path = os.path.join(save_folder, model_prefix)
-        return save_path
+        os.makedirs(save_folder)
+        return save_folder + "/"
