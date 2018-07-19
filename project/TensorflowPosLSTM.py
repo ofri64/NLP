@@ -1,3 +1,4 @@
+import numpy as np
 import tensorflow as tf
 from TensorflowAbstractModel import TensorflowAbstractModel
 
@@ -75,7 +76,7 @@ class TensorflowPosLSTM(TensorflowAbstractModel):
 
     def fit(self, x_train, y_train, mask_train):
         """
-        :param x_train: np.ndarray of shape (sample_length, max_input_length, vocab_size)
+        :param x_train: np.ndarray of shape (sample_length, max_input_length)
         :param y_train: np.ndarray of shape (sample_length, max_input_length)
         :param mask_train: np.ndarray of shape(sample_length, max_input_length)
         :return:
@@ -112,12 +113,12 @@ class TensorflowPosLSTM(TensorflowAbstractModel):
                             avg_loss = acc_loss / 100
                             print("Predicting for batch {0}-{1} out of {2} samples".format(i, min(i + self.batch_size, total_samples), total_samples))
                             print("Average loss in epoch {0} and step {1} is: {2}".format(epoch + 1, current_step, avg_loss))
-                            saver.save(session, self.saver_path, global_step=current_step)
+                            saver.save(session, self.saver_path)
                             acc_loss = 0
 
     def evaluate_sample(self, x_test, y_test, mask_test):
         """
-        :param x_test: np.ndarray of shape (sample_length, max_input_length, vocab_size)
+        :param x_test: np.ndarray of shape (sample_length, max_input_length)
         :param y_test: np.ndarray of shape (sample_length, max_input_length)
         :param mask_test: np.ndarray of shape(sample_length, max_input_length)
         :return: prediction accuracy (float)
@@ -129,6 +130,8 @@ class TensorflowPosLSTM(TensorflowAbstractModel):
             init = tf.global_variables_initializer()
             saver = tf.train.Saver()
             total_samples = x_test.shape[0]
+            total_tokens = np.sum(mask_test)  # total true values are number of tokens
+            num_correct_preds = 0
 
             with tf.Session() as session:
                 try:
@@ -136,14 +139,24 @@ class TensorflowPosLSTM(TensorflowAbstractModel):
                     saver.restore(session, self.saver_path)
 
                     for i in range(0, total_samples, self.batch_size):
-                        x_test_batch = x_test[i:min(i+self.batch_size, total_samples), :, :]
-                        y_test_batch = y_test[i:min(i+self.batch_size, total_samples), :, :]
-                        mask_test_batch = mask_test[i:min(i+self.batch_size, total_samples), :, :]
+                        x_test_batch = x_test[i:min(i+self.batch_size, total_samples), :]
+                        y_test_batch = y_test[i:min(i+self.batch_size, total_samples), :]
+                        mask_test_batch = mask_test[i:min(i+self.batch_size, total_samples), :]
+                        print("num tokens in batch {0} is {1}".format(
+                            i, np.sum(mask_test_batch)
+                        ))
                         print("Predicting for batch {0}-{1} out of {2} samples"
                               .format(i, min(i+self.batch_size, total_samples), total_samples))
                         preds = self.predict_on_batch(session, x_test_batch, mask_test_batch)
-                        print(preds.shape)
+                        equal_preds = np.equal(y_test_batch, preds)  # boolean values matrix (includes all sequence)
+                        equal_preds_after_mask = np.multiply(preds, equal_preds)  # now true only in real places not padded
+                        print("num correct predicted tokens in batch {0} is {1}".format(
+                            i, np.sum(equal_preds_after_mask)
+                        ))
+                        num_correct_preds += np.sum(equal_preds_after_mask)
 
-                except tf.errors.NotFoundError:
-                    print("Could not find save session variables. Either model was not trained of saver path is wrong")
+                    return num_correct_preds / total_tokens
+
+                except tf.errors.NotFoundError as e:
+                    print("Could not find save session variables. Either model was not trained of saver path is wrong\n" + e)
 
