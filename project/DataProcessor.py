@@ -1,5 +1,7 @@
 import numpy as np
 import re
+import pickle
+import os
 from collections import OrderedDict
 from keras.utils import to_categorical
 from keras.preprocessing.sequence import pad_sequences
@@ -35,13 +37,22 @@ PUNCTUATION_MARKS = [
 
 class DataProcessor(object):
 
-    def __init__(self, max_seq_len=40, rare_word_threshold=1):
+    def __init__(self, max_seq_len=40, rare_word_threshold=1, from_file=False, save_load_path=None):
         self.word2idx = None
         self.tag2idx = None
         self.vocab_size = None
         self.n_classes = None
         self.max_seq_len = max_seq_len
         self.rare_word_threshold = rare_word_threshold
+        self.from_file = from_file
+        self.save_load_path = save_load_path
+
+        if from_file:
+            try:
+                with open(save_load_path, "rb") as handle:
+                    self.word2idx, self.tag2idx, self.vocab_size, self.n_classes = pickle.load(handle)
+            except (FileNotFoundError, TypeError) as e:
+                print("Error while trying to load model parameters from file\n" + e)
 
     @staticmethod
     def read_conll_pos_file(path):
@@ -81,7 +92,33 @@ class DataProcessor(object):
         # if none of the conditions supplied - return generic "UNK" symbol
         return "UNK"
 
-    def initiate_word2idx_dict(self, total_words_dict):
+    def initiate_word_tags_dicts(self, train_path):
+        train_sents = DataProcessor.read_conll_pos_file(train_path)
+
+        # Iterate all tokens in training set
+        words, tags = OrderedDict([]), OrderedDict([])
+        for sent in train_sents:
+            for w, t in sent:
+                words[w] = words.get(w, 0) + 1
+                tags[t] = tags.get(t, 0) + 1
+
+        # Initiate word-to-index and tag-to-index dictionaries
+        self.word2idx = self._initiate_word2idx_dict(words)
+        self.tag2idx = self._initiate_tag2idx_dict(tags)
+        self.vocab_size = len(self.word2idx)
+        self.n_classes = len(self.tag2idx)
+
+        if self.save_load_path is None:
+            self.save_load_path = os.getcwd() + "/words_tags_dict.pickle"
+        try:
+            attributes = [self.word2idx, self.tag2idx, self.vocab_size, self.n_classes]
+            with open(self.save_load_path, "wb") as handle:
+                pickle.dump(attributes, handle, protocol=pickle.HIGHEST_PROTOCOL)
+        except (FileNotFoundError, TypeError) as e:
+            print("Could not save the word and tags dict to a file."
+                  "please check the path you provided exists\n" + e)
+
+    def _initiate_word2idx_dict(self, total_words_dict):
         words_set = set()
         for word, count in total_words_dict.items():
             if count > self.rare_word_threshold:
@@ -100,7 +137,7 @@ class DataProcessor(object):
 
         return word2idx
 
-    def initiate_tag2idx_dict(self, total_tags_dict):
+    def _initiate_tag2idx_dict(self, total_tags_dict):
         tag2idx = {t: idx for idx, t in enumerate(total_tags_dict.keys())}
 
         # add padding symbol
@@ -132,59 +169,27 @@ class DataProcessor(object):
 
         return boolean_mask
 
-    def preprocess_train_set(self, train_path):
+    def prepocess_sample_set(self, sample_path):
         """
-        Processes a training set from a given file path and initiate the word2idx and
-        tax2idx members
-        Returns a tuple of np.ndarrays of training set features (word idx) and training labels
-        """
-        train_sents = DataProcessor.read_conll_pos_file(train_path)
-
-        # Iterate all tokens in training set
-        words, tags = OrderedDict([]), OrderedDict([])
-        for sent in train_sents:
-            for w, t in sent:
-                words[w] = words.get(w, 0) + 1
-                tags[t] = tags.get(t, 0) + 1
-
-        # Initiate word-to-index and tag-to-index dictionaries
-        self.word2idx = self.initiate_word2idx_dict(words)
-        self.tag2idx = self.initiate_tag2idx_dict(tags)
-        self.vocab_size = len(self.word2idx)
-        self.n_classes = len(self.tag2idx)
-
-        # build sample and labels by replacing words and tags with matching idx
-        # Words too rate will be replaced by the index of their category
-        x_train = [[self.word2idx.get(w, self.word2idx[self.replace_rare_word(w)]) for w, _ in sent] for sent in train_sents]
-        y_train = [[self.tag2idx[t] for _, t in sent] for sent in train_sents]
-
-        # perform padding to structure every sentence example to a pre-defined size
-        # use "PADD" symbol as padding value
-        x_train = pad_sequences(maxlen=self.max_seq_len, sequences=x_train, padding="post", truncating="post", value=self.word2idx["PADD"])
-        y_train = pad_sequences(maxlen=self.max_seq_len, sequences=y_train, padding="post", truncating="post", value=self.tag2idx["PADD"])
-
-        return x_train, y_train
-
-    def preprocess_test_set(self, test_path):
-        """
-        Processes a test set from a given file path
+        Processes a sample set from a given file path
         Returns a tuple of np.ndarrays for test set features (word idx) and test labels
         """
         if self.word2idx is None or self.tag2idx is None:
             raise AssertionError(
                 "You must perform preprocessing for a training set first in order to initiate words indexes")
 
-        test_sents = DataProcessor.read_conll_pos_file(test_path)
+        sents = DataProcessor.read_conll_pos_file(sample_path)
 
         # build sample and labels by replacing words and tags with matching idx
         # Words never seen before will be replaced by the index of their category
-        x_test = [[self.word2idx.get(w, self.word2idx[self.replace_rare_word(w)]) for w, _ in sent] for sent in test_sents]
-        y_test = [[self.tag2idx[t] for _, t in sent] for sent in test_sents]
+        x = [[self.word2idx.get(w, self.word2idx[self.replace_rare_word(w)]) for w, _ in sent] for sent in sents]
+        y = [[self.tag2idx[t] for _, t in sent] for sent in sents]
 
         # perform padding to structure every sentence example to a defined size
         # use "PADD" symbol as padding value
 
-        x_test = pad_sequences(maxlen=self.max_seq_len, sequences=x_test, padding="post", truncating="post", value=self.word2idx["PADD"])
-        y_test = pad_sequences(maxlen=self.max_seq_len, sequences=y_test, padding="post", truncating="post", value=self.tag2idx["PADD"])
+        x = pad_sequences(maxlen=self.max_seq_len, sequences=x, padding="post", truncating="post", value=self.word2idx["PADD"])
+        y = pad_sequences(maxlen=self.max_seq_len, sequences=y, padding="post", truncating="post", value=self.tag2idx["PADD"])
 
-        return x_test, y_test
+        return x, y
+

@@ -139,21 +139,21 @@ class TensorflowPosLSTM(TensorflowAbstractModel):
                     saver.restore(session, self.saver_path)
 
                     for i in range(0, total_samples, self.batch_size):
+                        # print("Predicting for batch {0}-{1} out of {2} samples".format(i, min(i+self.batch_size, total_samples), total_samples))
                         x_test_batch = x_test[i:min(i+self.batch_size, total_samples), :]
                         y_test_batch = y_test[i:min(i+self.batch_size, total_samples), :]
                         mask_test_batch = mask_test[i:min(i+self.batch_size, total_samples), :]
-                        print("num tokens in batch {0} is {1}".format(
-                            i, np.sum(mask_test_batch)
-                        ))
-                        print("Predicting for batch {0}-{1} out of {2} samples"
-                              .format(i, min(i+self.batch_size, total_samples), total_samples))
                         preds = self.predict_on_batch(session, x_test_batch, mask_test_batch)
-                        equal_preds = np.equal(y_test_batch, preds)  # boolean values matrix (includes all sequence)
-                        equal_preds_after_mask = np.multiply(preds, equal_preds)  # now true only in real places not padded
-                        print("num correct predicted tokens in batch {0} is {1}".format(
-                            i, np.sum(equal_preds_after_mask)
-                        ))
-                        num_correct_preds += np.sum(equal_preds_after_mask)
+
+                        # compute number of correct predictions for batch
+                        # correct_preds is a boolean value matrix - can include True in padded tokens
+                        correct_preds = np.equal(y_test_batch, preds)
+
+                        # now we multiply with mask no True padded will became False
+                        correct_real_tokens = np.multiply(correct_preds, mask_test_batch)
+
+                        # number of correct token is simply number of True values in correct_real_tokens
+                        num_correct_preds += np.sum(correct_real_tokens)
 
                     return num_correct_preds / total_tokens
 
