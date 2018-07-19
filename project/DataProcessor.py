@@ -71,7 +71,7 @@ class DataProcessor(object):
                     tokens = line.strip().split("\t")
                     word, pos_tag = tokens[1], tokens[3]
 
-                    if word in PUNCTUATION_MARKS:
+                    if word in PUNCTUATION_MARKS or pos_tag in PUNCTUATION_MARKS:
                         pos_tag = "PUNCT"
 
                     curr.append((word, pos_tag))

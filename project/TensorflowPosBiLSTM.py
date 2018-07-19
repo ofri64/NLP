@@ -3,12 +3,12 @@ import tensorflow as tf
 from TensorflowAbstractModel import TensorflowAbstractModel
 
 
-class TensorflowPosLSTM(TensorflowAbstractModel):
+class TensorflowPosBiLSTM(TensorflowAbstractModel):
 
     def __init__(self, vocab_size, n_classes, max_input_length,
-                 embedding_size=50, hidden_size=300, batch_size=64,
+                 embedding_size=50, hidden_size=300, batch_size=32,
                  n_epochs=10, dropout_rate=0.5, lr=0.001, saver_path=None):
-        super(TensorflowPosLSTM, self).__init__()
+        super(TensorflowPosBiLSTM, self).__init__()
         self.vocab_size = vocab_size
         self.n_classes = n_classes
         self.max_input_length = max_input_length
@@ -48,12 +48,20 @@ class TensorflowPosLSTM(TensorflowAbstractModel):
                                      kernel_initializer=tf.contrib.layers.xavier_initializer(),
                                      bias_initializer=tf.constant_initializer())
 
-        LSTM_cell = tf.contrib.rnn.LSTMCell(num_units=self.hidden_size,
-                                            initializer=tf.contrib.layers.xavier_initializer())
+        # define forward LSTM cell
+        f_LSTM_cell = tf.contrib.rnn.LSTMCell(num_units=self.hidden_size,
+                                              initializer=tf.contrib.layers.xavier_initializer())
+        # define backward LSTM cell
+        b_LSTM_cell = tf.contrib.rnn.LSTMCell(num_units=self.hidden_size,
+                                              initializer=tf.contrib.layers.xavier_initializer())
 
-        LSTM_cell = tf.contrib.rnn.DropoutWrapper(LSTM_cell, input_keep_prob=self.dropout_placeholder)
+        # dropout for forward and backward
+        f_LSTM_cell = tf.contrib.rnn.DropoutWrapper(f_LSTM_cell, input_keep_prob=self.dropout_placeholder)
+        b_LSTM_cell = tf.contrib.rnn.DropoutWrapper(b_LSTM_cell, input_keep_prob=self.dropout_placeholder)
 
-        LSTM_outputs, _ = tf.nn.dynamic_rnn(LSTM_cell, embeddings, dtype=tf.float32)
+        (f_output, b_output),  _ = tf.nn.bidirectional_dynamic_rnn(
+                                        f_LSTM_cell, b_LSTM_cell,  embeddings, dtype=tf.float32)
+        LSTM_outputs = tf.concat([f_output, b_output], axis=2)
 
         pred_outputs = tf.layers.dense(LSTM_outputs,
                                        units=self.n_classes,
@@ -88,7 +96,7 @@ class TensorflowPosLSTM(TensorflowAbstractModel):
 
             init = tf.global_variables_initializer()
             if self.saver_path is None:
-                self.saver_path = TensorflowAbstractModel.define_saver_path(model_prefix="LSTM")
+                self.saver_path = TensorflowAbstractModel.define_saver_path(model_prefix="BiLSTM")
             saver = tf.train.Saver()
 
             with tf.Session() as session:
