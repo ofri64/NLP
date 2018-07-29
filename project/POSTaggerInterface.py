@@ -42,9 +42,8 @@ class POSTaggerInterface:
         """
         raise NotImplementedError("Save model parameters method is not implemented")
 
-    def load_model_params(self):
+    def load_model_params(self, file_path):
         """
         Load the model attributes from a file.
         """
         raise NotImplementedError("Load model parameters method is not implemented")
-

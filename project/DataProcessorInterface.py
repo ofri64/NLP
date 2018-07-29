@@ -9,6 +9,7 @@ class DataProcessorInterface:
     def __init__(self, max_seq_len=None, rare_word_threshold=1):
         self.word2idx = None
         self.tag2idx = None
+        self.idx2tag= None
         self.max_seq_len = max_seq_len
         self.rare_word_threshold = rare_word_threshold
 
@@ -99,3 +100,7 @@ class DataProcessorInterface:
     def set_max_sequence_length(self, max_len):
         self.max_seq_len = max_len
 
+    def get_idx2tag_vocab(self):
+        if self.idx2tag is None:
+            self.idx2tag = {idx: tag for tag, idx in self.tag2idx.get_items()}
+        return self.idx2tag
