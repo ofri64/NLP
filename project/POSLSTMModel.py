@@ -1,12 +1,15 @@
-from DataProcessor import DataProcessor
+from DataProcessor import HebrewDataProcessor, DataProcessor
 import requests
 
 from keras.models import Sequential
 from keras.layers import Dense, Activation, Embedding, LSTM, Dropout, TimeDistributed, Bidirectional, Masking
 from keras.callbacks import Callback
 
-TRAIN_PATH = 'Penn_Treebank/train.gold.conll'
-TEST_PATH = 'Penn_Treebank/dev.gold.conll'
+TRAIN_PATH = 'datasets/english/train.gold.conll'
+TEST_PATH = 'datasets/english/dev.gold.conll'
+
+HEB_TRAIN_PATH = 'datasets/hebrew/he_htb-ud-train.conllu'
+HEB_TEST_PATH = 'datasets/hebrew/he_htb-ud-test.conllu'
 
 
 class CloudCallback(Callback):
@@ -70,6 +73,8 @@ class POSLSTMModel(object):
                            optimizer=optimizer,
                            metrics=metrics)
 
+        print(self.model.summary())
+
     def fit(self, x_train, y_train, callbacks=None):
         self.model.fit(x_train, y_train, batch_size=self.batch_size, epochs=self.n_epochs, callbacks=callbacks)
 
@@ -79,11 +84,12 @@ class POSLSTMModel(object):
 
 
 if __name__ == "__main__":
-    data_processor = DataProcessor()
-    data_processor.initiate_word_tags_dicts(TRAIN_PATH)
-    x_train, y_train = data_processor.preprocess_sample_set(TRAIN_PATH)
+    data_processor = HebrewDataProcessor()
+    data_processor.initiate_word_tags_dicts(HEB_TRAIN_PATH)
+    data_processor.save_words_dict()
+    x_train, y_train = data_processor.preprocess_sample_set(HEB_TRAIN_PATH)
     y_train = data_processor.transform_to_one_hot(y_train)
-    x_test, y_test = data_processor.preprocess_sample_set(TEST_PATH)
+    x_test, y_test = data_processor.preprocess_sample_set(HEB_TEST_PATH)
     y_test = data_processor.transform_to_one_hot(y_test)
 
     stop_url = ''

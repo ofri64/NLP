@@ -2,6 +2,7 @@ import numpy as np
 import re
 import pickle
 import os
+import json
 from collections import OrderedDict
 from keras.utils import to_categorical
 from keras.preprocessing.sequence import pad_sequences
@@ -93,7 +94,7 @@ class DataProcessor(object):
         return "UNK"
 
     def initiate_word_tags_dicts(self, train_path):
-        train_sents = DataProcessor.read_conll_pos_file(train_path)
+        train_sents = self.read_conll_pos_file(train_path)
 
         # Iterate all tokens in training set
         words, tags = OrderedDict([]), OrderedDict([])
@@ -178,7 +179,7 @@ class DataProcessor(object):
             raise AssertionError(
                 "You must perform preprocessing for a training set first in order to initiate words indexes")
 
-        sents = DataProcessor.read_conll_pos_file(sample_path)
+        sents = self.read_conll_pos_file(sample_path)
 
         # build sample and labels by replacing words and tags with matching idx
         # Words never seen before will be replaced by the index of their category
@@ -193,3 +194,50 @@ class DataProcessor(object):
 
         return x, y
 
+    def save_words_dict(self):
+        if self.word2idx is not None:
+            with open('word2idx.json', 'w') as outfile:
+                json.dump(self.word2idx, outfile)
+
+        else:
+            print("Words were not initiated.")
+
+class HebrewDataProcessor(DataProcessor):
+
+    def __init__(self, max_seq_len=40, rare_word_threshold=1, from_file=False, save_load_path=None):
+        super(HebrewDataProcessor, self).__init__(max_seq_len, rare_word_threshold, from_file, save_load_path)
+
+    @staticmethod
+    def read_conll_pos_file(path):
+        """
+            Takes a path to a file and returns a list of word/tag pairs
+        """
+
+        sents = []
+        with open(path, "r") as f:
+            curr = []
+            for line in f:
+                line = line.strip()
+                if line == "":
+                    sents.append(curr)
+                    curr = []
+                else:
+                    tokens = line.strip().split("\t")
+                    index = tokens[0]
+
+                    # Non-separated words contain a hyphen in index number,
+                    # Comments start with hash
+                    if '-' in index or index[0] == '#':
+                        continue
+
+                    word, pos_tag = tokens[1], tokens[4]
+                    curr.append((word, pos_tag))
+        return sents
+
+    def save_words_dict(self):
+        if self.word2idx is not None:
+            with open('word2idx-heb.json', 'w') as outfile:
+                json.dump(self.word2idx, outfile)
+
+        else:
+            print("Words were not initiated.")
