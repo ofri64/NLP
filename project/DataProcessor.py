@@ -169,7 +169,7 @@ class DataProcessor(object):
 
         return boolean_mask
 
-    def prepocess_sample_set(self, sample_path):
+    def preprocess_sample_set(self, sample_path):
         """
         Processes a sample set from a given file path
         Returns a tuple of np.ndarrays for test set features (word idx) and test labels

@@ -2,7 +2,7 @@ from DataProcessor import DataProcessor
 import requests
 
 from keras.models import Sequential
-from keras.layers import Dense, Activation, Embedding, LSTM, Dropout, TimeDistributed, Bidirectional
+from keras.layers import Dense, Activation, Embedding, LSTM, Dropout, TimeDistributed, Bidirectional, Masking
 from keras.callbacks import Callback
 
 TRAIN_PATH = 'Penn_Treebank/train.gold.conll'
@@ -41,12 +41,14 @@ class CloudCallback(Callback):
 
 
 class POSLSTMModel(object):
-    def __init__(self, vocab_size, n_classes, max_input_length,
-                 embed_size=50, hidden_size=300, batch_size=32, n_epochs=10, dropout_rate=0.5, immediate_build=True):
+    def __init__(self, vocab_size, n_classes, max_input_length, padding_index,
+                 embed_size=50, hidden_size=300, batch_size=32, n_epochs=10,
+                 dropout_rate=0.5, immediate_build=True):
         self.model = None
         self.vocab_size = vocab_size
         self.n_classes = n_classes
         self.max_input_length = max_input_length
+        self.padding_index = padding_index
         self.embed_size = embed_size
         self.hidden_size = hidden_size
         self.batch_size = batch_size
@@ -58,6 +60,7 @@ class POSLSTMModel(object):
 
     def build(self, optimizer='adam', metrics=['accuracy']):
         self.model = Sequential([Embedding(input_dim=self.vocab_size, output_dim=self.embed_size, input_length=self.max_input_length),
+                                Masking(mask_value=self.padding_index),
                                 Dropout(self.dropout_rate),
                                 Bidirectional(LSTM(self.hidden_size, return_sequences=True)),
                                 TimeDistributed(Dense(self.n_classes)),
@@ -77,9 +80,10 @@ class POSLSTMModel(object):
 
 if __name__ == "__main__":
     data_processor = DataProcessor()
-    x_train, y_train = data_processor.preprocess_train_set(TRAIN_PATH)
+    data_processor.initiate_word_tags_dicts(TRAIN_PATH)
+    x_train, y_train = data_processor.preprocess_sample_set(TRAIN_PATH)
     y_train = data_processor.transform_to_one_hot(y_train)
-    x_test, y_test = data_processor.preprocess_test_set(TEST_PATH)
+    x_test, y_test = data_processor.preprocess_sample_set(TEST_PATH)
     y_test = data_processor.transform_to_one_hot(y_test)
 
     stop_url = ''
@@ -87,9 +91,11 @@ if __name__ == "__main__":
     cloud_callback = CloudCallback(remote=False, slack_url=slack_url, stop_url=stop_url)
 
     try:
+        padding_index = data_processor.word2idx["PADD"]
         model = POSLSTMModel(vocab_size=data_processor.vocab_size,
                              n_classes=data_processor.n_classes,
-                             max_input_length=data_processor.max_seq_len)
+                             max_input_length=data_processor.max_seq_len,
+                             padding_index=padding_index)
 
         model.fit(x_train, y_train, callbacks=[cloud_callback])
 

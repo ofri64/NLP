@@ -60,7 +60,7 @@ class TensorflowPosBiLSTM(TensorflowAbstractModel):
         b_LSTM_cell = tf.contrib.rnn.DropoutWrapper(b_LSTM_cell, input_keep_prob=self.dropout_placeholder)
 
         (f_output, b_output),  _ = tf.nn.bidirectional_dynamic_rnn(
-                                        f_LSTM_cell, b_LSTM_cell,  embeddings, dtype=tf.float32)
+                                        f_LSTM_cell, b_LSTM_cell, embeddings, dtype=tf.float32)
         LSTM_outputs = tf.concat([f_output, b_output], axis=2)
 
         pred_outputs = tf.layers.dense(LSTM_outputs,

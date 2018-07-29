@@ -16,8 +16,8 @@ if __name__ == "__main__":
 
     data_processor = DataProcessor(from_file=True, save_load_path=VOCAB_PATH)
 
-    x_train, y_train = data_processor.prepocess_sample_set(TRAIN_PATH)
-    x_test, y_test = data_processor.prepocess_sample_set(TEST_PATH)
+    x_train, y_train = data_processor.preprocess_sample_set(TRAIN_PATH)
+    x_test, y_test = data_processor.preprocess_sample_set(TEST_PATH)
 
     # create boolean mask vectors
     mask_train = data_processor.create_boolean_mask(x_train)
