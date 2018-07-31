@@ -29,11 +29,15 @@ class DataProcessorInterface:
     @staticmethod
     def transform_to_index(one_hot_sample):
         """
-        Transform to the index of the one hot encoding for each word in sample
+        Transform to the index of the one hot encoding a certain word
         :param one_hot_sample:
-        :return: array of the one hot indices
+        :return: the one hot index
         """
-        return np.array([np.where(x == 1)[0][0] for x in one_hot_sample])
+        index_sample = []
+        for sent in one_hot_sample:
+            index_sample.append([np.where(x == 1)[0][0] for x in sent])
+
+        return np.array(index_sample)
 
     @staticmethod
     def create_boolean_mask(x_sample, padding_index):

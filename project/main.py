@@ -59,6 +59,7 @@ if __name__ == "__main__":
     tagger = KerasPOSTagger(english_processor, n_epochs=1, immediate_build=False)
     # tagger.fit(x_train, y_train)
     tagger.load_model_params('BiLSTM_model-2018-07-29 18:44:20.413416')
+    score = tagger.evaluate_sample_conditioned(x_test, y_test, 'unseen')
 
-    predictions = tagger.predict(x_test[:1, :, :])
+    print('UNSEEN SCORE: ', score)
 

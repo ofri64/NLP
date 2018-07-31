@@ -67,20 +67,34 @@ class KerasPOSTagger(POSTaggerInterface):
         return score
 
     def evaluate_sample_conditioned(self, x_test, y_test, condition):
-        x_unseen_test = np.array([])
-        y_unseen_test = np.array([])
+        x_unseen_test = []
+        y_unseen_test = []
+        x_test_indices = self.data_processor.transform_to_index(x_test)
+        boolean_unseen_matrix = np.zeros([x_test.shape[0], x_test.shape[1]])
 
         if condition == 'unseen':
-            for i, sent in enumerate(x_test):
-                for word in sent:
-                    if self.data_processor.transform_to_index(word) in self.data_processor.unk_indices:
-                        x_unseen_test = np.append(x_unseen_test, sent)
-                        y_unseen_test = np.append(y_unseen_test, y_test[i])
-                        break
+            for i, sent in enumerate(x_test_indices):
+                appended = False
+                for j, word in enumerate(sent):
+                    if word in self.data_processor.unk_indices:
+                        boolean_unseen_matrix[i, j] = 1
+                        print('UNKNOWN WORD:', word, i)
+                        if not appended:
+                            x_unseen_test.append(sent)
+                            y_unseen_test.append(y_test[i])
+                            appended = True
 
-            return self.evaluate_sample(x_unseen_test, y_unseen_test)
+            x_unseen_test = np.array(self.data_processor.transform_to_one_hot(x_unseen_test, x_test.shape[2]))
+            y_unseen_test = self.data_processor.transform_to_index(y_unseen_test)
 
-        #TODO: Ambiguous case
+            print('Evaluating ', len(x_unseen_test))
+
+            predictions = self.predict(x_unseen_test)
+            acc_matrix = predictions == y_unseen_test
+
+            return acc_matrix
+
+        # TODO: Ambiguous case
 
         else:
             raise AttributeError("Condition must be one of: {'unseen', 'ambiguous'}")
