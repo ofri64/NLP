@@ -51,14 +51,15 @@ if __name__ == "__main__":
     x_test, y_test = english_processor.transform_to_one_hot(x_test, len(word_dict)), \
                        english_processor.transform_to_one_hot(y_test, len(tag_dict))
 
+    english_processor.save_word_tags_dict('english_dicts2.pkl')
+
     print(english_processor.get_tag2idx_vocab())
     print(len(english_processor.get_word2idx_vocab()))
     print(x_test[0])
     print('------')
 
-    tagger = KerasPOSTagger(english_processor, n_epochs=1, immediate_build=False)
-    # tagger.fit(x_train, y_train)
-    tagger.load_model_params('BiLSTM_model-2018-07-29 18:44:20.413416')
+    tagger = KerasPOSTagger(english_processor, n_epochs=1)
+    tagger.fit(x_train, y_train)
     score = tagger.evaluate_sample_conditioned(x_test, y_test, 'unseen')
 
     print('UNSEEN SCORE: ', score)
