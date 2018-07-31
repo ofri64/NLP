@@ -52,7 +52,7 @@ class KerasPOSTagger(POSTaggerInterface):
             self.build()
 
         # Add checkpoint to callbacks
-        now = datetime.now()
+        now = str(datetime.now()).split('.')[0]
         saver_callback = CheckpointCallback("BiLSTM_model-{0}.h5".format(now)).get_callback()
         if callbacks is None:
             callbacks = [saver_callback]
@@ -66,19 +66,28 @@ class KerasPOSTagger(POSTaggerInterface):
         score = self.model.evaluate(x_test, y_test, batch_size=self.batch_size)
         return score
 
-    # def evaluate_sample_conditioned(self, x_test, y_test, condition):
-    #     if condition == 'unseen':
-    #
-    #
-    #     elif condition == 'ambiguous':
-    #
-    #     else:
-    #         raise AttributeError("Condition must be one of: {'unseen', 'ambiguous'}")
+    def evaluate_sample_conditioned(self, x_test, y_test, condition):
+        x_unseen_test = np.array([])
+        y_unseen_test = np.array([])
 
-    def predict_sentence(self, sentence):
-        idx2tag = self.data_processor.get_idx2tag_vocab()
-        predictions = np.argmax(self.model.predict(sentence), axis=1)
-        return np.array([idx2tag[prediction] for prediction in predictions])
+        if condition == 'unseen':
+            for i, sent in enumerate(x_test):
+                for word in sent:
+                    if self.data_processor.transform_to_index(word) in self.data_processor.unk_indices:
+                        x_unseen_test = np.append(x_unseen_test, sent)
+                        y_unseen_test = np.append(y_unseen_test, y_test[i])
+                        break
+
+            return self.evaluate_sample(x_unseen_test, y_unseen_test)
+
+        #TODO: Ambiguous case
+
+        else:
+            raise AttributeError("Condition must be one of: {'unseen', 'ambiguous'}")
+
+    def predict(self, sentences):
+        predictions = self.model.predict(sentences)
+        return np.argmax(predictions, axis=2)
 
     def load_model_params(self, file_path):
         self.model = load_model(file_path)

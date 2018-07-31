@@ -4,9 +4,10 @@ import numpy as np
 from DataProcessor import DataProcessor
 from TensorflowPosBiLSTM import TensorflowPosBiLSTM
 from DataProcessors import EnglishDataProcessor
+from POSTaggers import KerasPOSTagger
 
-TRAIN_PATH = 'Penn_Treebank/train.gold.conll'
-TEST_PATH = 'Penn_Treebank/dev.gold.conll'
+TRAIN_PATH = 'datasets/english/train.gold.conll'
+TEST_PATH = 'datasets/english/dev.gold.conll'
 
 CURR_DIR = os.getcwd()
 VOCAB_PATH = os.path.join(CURR_DIR, "words_tags_dict.pickle")
@@ -41,6 +42,23 @@ if __name__ == "__main__":
     # print("test accuracy is: {0}".format(test_accuracy))
 
     english_processor = EnglishDataProcessor()
-    english_processor.load_word_tags_dicts("english_dicts.pickle")
+    word_dict, tag_dict = english_processor.create_word_tags_dicts(TRAIN_PATH)
+    x_train, y_train = english_processor.preprocess_sample(TRAIN_PATH)
+    x_train, y_train = english_processor.transform_to_one_hot(x_train, len(word_dict)), \
+                       english_processor.transform_to_one_hot(y_train, len(tag_dict))
+
+    x_test, y_test = english_processor.preprocess_sample(TEST_PATH)
+    x_test, y_test = english_processor.transform_to_one_hot(x_test, len(word_dict)), \
+                       english_processor.transform_to_one_hot(y_test, len(tag_dict))
+
     print(english_processor.get_tag2idx_vocab())
     print(len(english_processor.get_word2idx_vocab()))
+    print(x_test[0])
+    print('------')
+
+    tagger = KerasPOSTagger(english_processor, n_epochs=1, immediate_build=False)
+    # tagger.fit(x_train, y_train)
+    tagger.load_model_params('BiLSTM_model-2018-07-29 18:44:20.413416')
+
+    predictions = tagger.predict(x_test[:1, :, :])
+

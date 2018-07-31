@@ -9,7 +9,7 @@ class DataProcessorInterface:
     def __init__(self, max_seq_len=None, rare_word_threshold=1):
         self.word2idx = None
         self.tag2idx = None
-        self.idx2tag= None
+        self.idx2tag = None
         self.max_seq_len = max_seq_len
         self.rare_word_threshold = rare_word_threshold
 
@@ -25,6 +25,15 @@ class DataProcessorInterface:
         sample_one_hot = to_categorical(sample, mapping_dict_length)
 
         return sample_one_hot
+
+    @staticmethod
+    def transform_to_index(one_hot_sample):
+        """
+        Transform to the index of the one hot encoding for each word in sample
+        :param one_hot_sample:
+        :return: array of the one hot indices
+        """
+        return np.array([np.where(x == 1)[0][0] for x in one_hot_sample])
 
     @staticmethod
     def create_boolean_mask(x_sample, padding_index):
@@ -102,5 +111,5 @@ class DataProcessorInterface:
 
     def get_idx2tag_vocab(self):
         if self.idx2tag is None:
-            self.idx2tag = {idx: tag for tag, idx in self.tag2idx.get_items()}
+            self.idx2tag = {idx: tag for tag, idx in self.tag2idx.items()}
         return self.idx2tag

@@ -32,6 +32,8 @@ class EnglishDataProcessor(DataProcessorInterface):
             "[", "]", "{", "}", "<", ">", ":", ";", "?", "!", "-", "--", "``"
         ]
 
+        self.unk_indices = []
+
     @staticmethod
     def _contains_digit_and_char(word, ch):
         return bool(re.search('\d', word)) and ch in word
@@ -52,6 +54,8 @@ class EnglishDataProcessor(DataProcessorInterface):
 
     def _init_word2idx_dict(self, total_words_dict):
         words_set = set()
+        unk_indices = []
+
         for word, count in total_words_dict.items():
             if count > self.rare_word_threshold:
                 words_set.add(word)
@@ -66,6 +70,11 @@ class EnglishDataProcessor(DataProcessorInterface):
 
         # transform words to indices
         word2idx = {w: idx for idx, w in enumerate(words_set)}
+        for word in word2idx:
+            if word in self.GLOBAL_CATEGORIES.keys() or word == "UNK":
+                unk_indices.append(word2idx[word])
+
+        self.unk_indices = unk_indices
 
         return word2idx
 
