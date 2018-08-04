@@ -1,9 +1,11 @@
 import os
-from DataProcessors import EnglishDataProcessor
+from DataProcessors import EnglishDataProcessor, HebrewBinyanDataProcessor
 from POSTaggers import KerasPOSTagger
 
 TRAIN_PATH = 'datasets/english/train.gold.conll'
 TEST_PATH = 'datasets/english/dev.gold.conll'
+
+HEBREW_TRAIN_PATH = 'datasets/hebrew/he_htb-ud-train.conllu'
 
 CURR_DIR = os.getcwd()
 VOCAB_PATH = os.path.join(CURR_DIR, "words_tags_dict.pickle")
@@ -37,26 +39,30 @@ if __name__ == "__main__":
     # test_accuracy = model.evaluate_sample(x_test, y_test, mask_test)
     # print("test accuracy is: {0}".format(test_accuracy))
 
-    english_processor = EnglishDataProcessor()
-    word_dict, tag_dict = english_processor.create_word_tags_dicts(TRAIN_PATH)
-    x_train, y_train = english_processor.preprocess_sample(TRAIN_PATH)
-    x_train, y_train = english_processor.transform_to_one_hot(x_train, len(word_dict)), \
-                       english_processor.transform_to_one_hot(y_train, len(tag_dict))
+    # english_processor = EnglishDataProcessor()
+    # word_dict, tag_dict = english_processor.create_word_tags_dicts(TRAIN_PATH)
+    # x_train, y_train = english_processor.preprocess_sample(TRAIN_PATH)
+    # x_train, y_train = english_processor.transform_to_one_hot(x_train, len(word_dict)), \
+    #                    english_processor.transform_to_one_hot(y_train, len(tag_dict))
+    #
+    # x_test, y_test = english_processor.preprocess_sample(TEST_PATH)
+    # x_test, y_test = english_processor.transform_to_one_hot(x_test, len(word_dict)), \
+    #                    english_processor.transform_to_one_hot(y_test, len(tag_dict))
+    #
+    # english_processor.save_word_tags_dict('english_dicts2.pkl')
+    #
+    # print(english_processor.get_tag2idx_vocab())
+    # print(len(english_processor.get_word2idx_vocab()))
+    # print(x_test[0])
+    # print('------')
+    #
+    # tagger = KerasPOSTagger(english_processor, n_epochs=1)
+    # tagger.fit(x_train, y_train)
+    # score = tagger.evaluate_sample_conditioned(x_test, y_test, 'unseen')
+    #
+    # print('UNSEEN SCORE: ', score)
 
-    x_test, y_test = english_processor.preprocess_sample(TEST_PATH)
-    x_test, y_test = english_processor.transform_to_one_hot(x_test, len(word_dict)), \
-                       english_processor.transform_to_one_hot(y_test, len(tag_dict))
-
-    english_processor.save_word_tags_dict('english_dicts2.pkl')
-
-    print(english_processor.get_tag2idx_vocab())
-    print(len(english_processor.get_word2idx_vocab()))
-    print(x_test[0])
-    print('------')
-
-    tagger = KerasPOSTagger(english_processor, n_epochs=1)
-    tagger.fit(x_train, y_train)
-    score = tagger.evaluate_sample_conditioned(x_test, y_test, 'unseen')
-
-    print('UNSEEN SCORE: ', score)
-
+    hebrew_processor = HebrewBinyanDataProcessor()
+    word_dict, tag_dict, binyan_dict = hebrew_processor.create_word_tag_binyan_dicts(HEBREW_TRAIN_PATH)
+    x_train, y_train = hebrew_processor.preprocess_sample(HEBREW_TRAIN_PATH)
+    print()
