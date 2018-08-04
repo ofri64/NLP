@@ -103,5 +103,5 @@ ENV/
 # pycharm project settings
 .idea
 
-# tree bank
-.gold.conll
+# datasets
+.conll
