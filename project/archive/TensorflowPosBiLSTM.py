@@ -1,6 +1,6 @@
 import numpy as np
 import tensorflow as tf
-from TensorflowAbstractModel import TensorflowAbstractModel
+from archive.TensorflowAbstractModel import TensorflowAbstractModel
 
 
 class TensorflowPosBiLSTM(TensorflowAbstractModel):

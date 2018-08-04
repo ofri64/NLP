@@ -1,4 +1,4 @@
-from DataProcessor import HebrewDataProcessor, DataProcessor
+from archive.DataProcessor import HebrewDataProcessor
 import requests
 
 from keras.models import Sequential

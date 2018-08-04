@@ -1,8 +1,4 @@
-import time
 import os
-import numpy as np
-from DataProcessor import DataProcessor
-from TensorflowPosBiLSTM import TensorflowPosBiLSTM
 from DataProcessors import EnglishDataProcessor
 from POSTaggers import KerasPOSTagger
 

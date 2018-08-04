@@ -34,7 +34,7 @@ class POSTaggerInterface:
         :param sentence: np.ndarray of shape (sample_size, max_input_length, vocab_size)
         :return: np.ndarray of shape (sample_size, sentence_length)
         """
-        raise NotImplementedError("Predict sentence conditioned method is not implemented")
+        raise NotImplementedError("Predict sentence method is not implemented")
 
     def save_model_params(self):
         """
