@@ -105,3 +105,4 @@ ENV/
 
 # datasets
 .conll
+.conllu
