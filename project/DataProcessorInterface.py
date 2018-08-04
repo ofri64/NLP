@@ -82,14 +82,15 @@ class DataProcessorInterface:
 
         return self.word2idx, self.tag2idx
 
-    def load_word_tags_dicts(self, file_path):
+    def load(self, file_path):
         with open(file_path, "rb") as handle:
-            self.word2idx, self.tag2idx = pickle.load(handle)
+            tmp_dict = pickle.load(handle)
+            self.__dict__.update(tmp_dict)
 
-    def save_word_tags_dict(self, file_path):
+    def save(self, file_path):
         with open(file_path, "wb") as handle:
-            attributes = [self.word2idx, self.tag2idx]
-            pickle.dump(attributes, handle, protocol=pickle.HIGHEST_PROTOCOL)
+            # attributes = [self.word2idx, self.tag2idx]
+            pickle.dump(self.__dict__, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
     def read_file(self, file_path):
         raise NotImplementedError("Read file method is not implemented yet")
