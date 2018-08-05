@@ -8,12 +8,48 @@ from _datetime import datetime
 import numpy as np
 
 
+def base_network(input_length, vocab_size, embed_size, padding_index, dropout_rate=.5, hidden_size=100):
+    input_layer = Input(shape=(input_length, vocab_size,))
+    embedding = Dense(units=embed_size)(input_layer)
+    masking = Masking(mask_value=padding_index)(embedding)
+    dropout = Dropout(dropout_rate)(masking)
+    bilstm = Bidirectional(LSTM(units=hidden_size, return_sequences=True))(dropout)
+
+    return input_layer, bilstm
+
+
+def output_layer(temporal_layer, n_categories, name):
+    return Dense(units=n_categories, activation='softmax', name=name)(temporal_layer)
+
+
+def feature_outputs(bilstm, *features_list, **features_dict):
+    outputs = [output_layer(bilstm, o['n_categories'], o['name']) for o in features_list] + \
+              [output_layer(bilstm, n_categories, name) for name, n_categories in features_dict.items()]
+
+    return outputs
+
+
+def build_model(input_layer, bilstm, hidden_size, n_pos, *outputs_list, **outputs_dict):
+    pos_bilstm = Bidirectional(LSTM(units=hidden_size, return_sequences=True))(bilstm)
+    pos_output = Dense(units=n_pos, activation='softmax', name='pos')(pos_bilstm)
+
+    outputs = [pos_output] + feature_outputs(bilstm, *outputs_list, **outputs_dict)
+    return Model(inputs=input_layer, outputs=outputs)
+
+
+# EXAMPLE (1 feature - binyan):
+# input_layer, bilstm = base_network(input_length, vocab_size, embed_size, padding_index)
+# self.model = build_model(input_layer, bilstm, hidden_size, n_pos, binyan=n_binyans})
+# self.build_and_compile()
+
+
 class KerasPOSTagger(POSTaggerInterface):
 
     def __init__(self, data_processor, embed_size=50, hidden_size=100, batch_size=32, n_epochs=10,
                  dropout_rate=0.5, immediate_build=True):
 
         self.model = None
+        self.model_summary = None
 
         self.data_processor = data_processor
         self.embed_size = embed_size
@@ -24,6 +60,13 @@ class KerasPOSTagger(POSTaggerInterface):
 
         if immediate_build:
             self.build()
+
+    def build_and_compile(self, optimizer='adam', metrics=['accuracy']):
+        self.build(optimizer, metrics)
+        self.model.compile(loss='categorical_crossentropy',
+                           optimizer=optimizer,
+                           metrics=metrics)
+        print(self.model.summary())
 
     def build(self, optimizer='adam', metrics=['accuracy']):
         # Receive data information from processor
@@ -168,4 +211,3 @@ class MTLHebrewBinyanTagger(KerasPOSTagger):
     def predict(self, sentences):
         pos_predictions, _ = self.model.predict(sentences)
         return np.argmax(pos_predictions, axis=2)
-
