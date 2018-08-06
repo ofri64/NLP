@@ -1,11 +1,16 @@
 from POSTaggerInterface import POSTaggerInterface
-from KerasCallbacks import CloudCallback, CheckpointCallback
-from DataProcessors import HebrewBinyanDataProcessor
+from KerasCallbacks import CheckpointCallback
 
-from keras.models import Sequential, Model, load_model
-from keras.layers import Dense, Activation, Embedding, LSTM, Dropout, TimeDistributed, Bidirectional, Masking, Input
+from keras.callbacks import ModelCheckpoint
+from keras.models import Model, load_model
+from keras.layers import Dense, LSTM, Dropout, Bidirectional, Masking, Input
 from _datetime import datetime
 import numpy as np
+import os
+
+
+def modelpath(subpath=''):
+    return os.path.dirname(__file__) + '/../models/' + subpath
 
 
 def base_network(input_length, vocab_size, embed_size, padding_index, dropout_rate=.5, hidden_size=100):
@@ -101,12 +106,22 @@ class KerasPOSTagger(POSTaggerInterface):
             name = 'my_cool_model'
 
         # Add checkpoint to callbacks
-        now = str(datetime.now()).split('.')[0]
-        saver_callback = CheckpointCallback('{0}-{1}.h5'.format(name, now)).get_callback()
-        if callbacks is None:
-            callbacks = [saver_callback]
-        else:
-            callbacks.append(saver_callback)
+        # now = str(datetime.now()).split('.')[0]
+        # saver_callback = CheckpointCallback('../models/{0}/{0}-{1}.h5'.format(name, now)).get_callback()
+        # if callbacks is None:
+        #     callbacks = [checkpoint]
+        # else:
+        #     callbacks.append(checkpoint)
+
+        if not os.path.exists(modelpath(name)):
+            os.mkdir(modelpath(name))
+
+        start_time = '{:%d-%m-%Y_%H:%M:%S}'.format(datetime.now())
+        os.mkdir(modelpath(name + '/' + start_time))
+        filepath = modelpath('%s/%s/model.{epoch:02d}.hdf5' % (name, start_time))
+
+        checkpoint = ModelCheckpoint(filepath, save_weights_only=False)
+        callbacks = [checkpoint] if callbacks is None else callbacks + [checkpoint]
 
         # Fit model and concatenate callbacks
         self.model.fit(x_train, y_train, batch_size=self.batch_size, epochs=self.n_epochs, callbacks=callbacks)
@@ -128,7 +143,7 @@ class KerasPOSTagger(POSTaggerInterface):
                 for j, word in enumerate(sent):
                     if word in self.data_processor.unk_indices:
                         boolean_unseen_matrix[num_sent, j] = 1
-                        print('UNKNOWN WORD:', word, i)
+                        # print('UNKNOWN WORD:', word, i)
                         if not appended:
                             x_unseen_test.append(sent)
                             y_unseen_test.append(y_test[i])

@@ -1,16 +1,34 @@
 import os
-from DataProcessors import EnglishDataProcessor, HebrewBinyanDataProcessor, HebrewDataProcessor
-from POSTaggers import KerasPOSTagger, MTLHebrewBinyanTagger
+from DataProcessors import HebrewBinyanDataProcessor, HebrewDataProcessor
+from POSTaggers import MTLHebrewBinyanTagger, KerasPOSTagger
 
-TRAIN_PATH = 'datasets/english/train.gold.conll'
-TEST_PATH = 'datasets/english/dev.gold.conll'
 
-HEBREW_TRAIN_PATH = 'datasets/hebrew/he_htb-ud-train.conllu'
-HEBREW_TEST_PATH = 'datasets/hebrew/he_htb-ud-test.conllu'
-HEBREW_DEV_PATH = 'datasets/hebrew/he_htb-ud-dev.conllu'
+def dataset(subpath):
+    return os.path.dirname(__file__) + '/../datasets/' + subpath
+
+
+def pickle(name):
+    return os.path.dirname(__file__) + '/../pickles/' + name + '.pickle'
+
+
+TRAIN_PATH = '../datasets/english/train.gold.conll'
+TEST_PATH = '../datasets/english/dev.gold.conll'
+
+# HEBREW_TRAIN_PATH = '../datasets/hebrew/he_htb-ud-train.conllu'
+# HEBREW_TEST_PATH = '../datasets/hebrew/he_htb-ud-test.conllu'
+# HEBREW_DEV_PATH = '../datasets/hebrew/he_htb-ud-dev.conllu'
+
+HEBREW_TRAIN_PATH = dataset('hebrew/he_htb-ud-train.conllu')
+HEBREW_TEST_PATH = dataset('hebrew/he_htb-ud-test.conllu')
+HEBREW_DEV_PATH = dataset('hebrew/he_htb-ud-dev.conllu')
 
 CURR_DIR = os.getcwd()
 VOCAB_PATH = os.path.join(CURR_DIR, "words_tags_dict.pickle")
+
+
+def train(processor, dataset):
+    pass
+
 
 if __name__ == "__main__":
     # # data_processor = DataProcessor(rare_word_threshold=5)
@@ -81,62 +99,62 @@ if __name__ == "__main__":
     # Dev set - 86.70%
     # Test set - 87.98%
 
-    # hebrew_processor = HebrewDataProcessor()
-    # # word_dict, tag_dict = hebrew_processor.create_word_tags_dicts(HEBREW_TRAIN_PATH)
-    # # hebrew_processor.save('hebrew_processor.pickle')
+    hebrew_processor = HebrewDataProcessor()
+    hebrew_processor.create_word_tags_dicts(HEBREW_TRAIN_PATH)
+    hebrew_processor.save(pickle('hebrew_processor'))
     # hebrew_processor.load('hebrew_processor.pickle')
-    # word_dict = hebrew_processor.get_word2idx_vocab()
-    # tag_dict = hebrew_processor.get_tag2idx_vocab()
-    #
-    # # x_train, y_train = hebrew_processor.preprocess_sample(HEBREW_TRAIN_PATH)
-    # # x_train = hebrew_processor.transform_to_one_hot(x_train, len(word_dict))
-    # # y_train = hebrew_processor.transform_to_one_hot(y_train, len(tag_dict))
-    #
+    word_dict = hebrew_processor.get_word2idx_vocab()
+    tag_dict = hebrew_processor.get_tag2idx_vocab()
+
+    x_train, y_train = hebrew_processor.preprocess_sample(HEBREW_TRAIN_PATH)
+    x_train = hebrew_processor.transform_to_one_hot(x_train, len(word_dict))
+    y_train = hebrew_processor.transform_to_one_hot(y_train, len(tag_dict))
+
     # x_dev, y_dev = hebrew_processor.preprocess_sample(HEBREW_DEV_PATH)
     # x_dev = hebrew_processor.transform_to_one_hot(x_dev, len(word_dict))
     # y_dev = hebrew_processor.transform_to_one_hot(y_dev, len(tag_dict))
-    #
-    # x_test, y_test = hebrew_processor.preprocess_sample(HEBREW_TEST_PATH)
-    # x_test = hebrew_processor.transform_to_one_hot(x_test, len(word_dict))
-    # y_test = hebrew_processor.transform_to_one_hot(y_test, len(tag_dict))
-    #
-    # model = KerasPOSTagger(hebrew_processor, n_epochs=10)
-    # # model.fit(x_train, y_train, 'hebrew')
+
+    x_test, y_test = hebrew_processor.preprocess_sample(HEBREW_TEST_PATH)
+    x_test = hebrew_processor.transform_to_one_hot(x_test, len(word_dict))
+    y_test = hebrew_processor.transform_to_one_hot(y_test, len(tag_dict))
+
+    model = KerasPOSTagger(hebrew_processor, n_epochs=10)
+    model.fit(x_train, y_train, 'hebrew')
     # model.load_model_params('hebrew-2018-08-04 16:40:20.h5')
-    #
-    # print(model.evaluate_sample(x_dev, y_dev))
-    # print(model.model.metrics_names)
-    #
-    # print(model.evaluate_sample_conditioned(x_dev, y_dev, 'unseen'))
+
+    print(model.evaluate_sample(x_test, y_test))
+    print(model.model.metrics_names)
+
+    print(model.evaluate_sample_conditioned(x_test, y_test, 'unseen'))
 
 
     # HEBREW BINYAN
     # Dev set - 86.35%
     # Test set 86.358%
 
-    hebrew_processor = HebrewBinyanDataProcessor()
-    hebrew_processor.load('hebrew_binyan_processor.pickle')
-    word_dict = hebrew_processor.get_word2idx_vocab()
-    tag_dict = hebrew_processor.get_tag2idx_vocab()
-    binyan_dict = hebrew_processor.get_binyan2idx_vocab()
-
-    x_dev, y_dev_pos, y_dev_binyan = hebrew_processor.preprocess_sample(HEBREW_TEST_PATH)
-    x_dev = hebrew_processor.transform_to_one_hot(x_dev, len(word_dict))
-    y_dev_pos = hebrew_processor.transform_to_one_hot(y_dev_pos, len(tag_dict))
-    y_dev_binyan = hebrew_processor.transform_to_one_hot(y_dev_binyan, len(binyan_dict))
-
-    # x_test, y_pos, y_binyan = hebrew_processor.preprocess_sample(HEBREW_TEST_PATH)
-    # x_test = hebrew_processor.transform_to_one_hot(x_test, len(word_dict))
-    # y_pos = hebrew_processor.transform_to_one_hot(y_pos, len(tag_dict))
-    # y_binyan = hebrew_processor.transform_to_one_hot(y_binyan, len(binyan_dict))
-
-    model = MTLHebrewBinyanTagger(hebrew_processor, immediate_build=False)
-    model.load_model_params('hebrew_binyan-2018-08-04 15:46:00.h5')
-
-    print(model.evaluate_sample(x_dev, [y_dev_pos, y_dev_binyan]))
-    print(model.model.metrics_names)
-
-    print(model.evaluate_sample_conditioned(x_dev, y_dev_pos, 'unseen'))
+    # hebrew_processor = HebrewBinyanDataProcessor()
+    # hebrew_processor.load('../pickles/hebrew_binyan_processor.pickle')
+    # word_dict = hebrew_processor.get_word2idx_vocab()
+    # tag_dict = hebrew_processor.get_tag2idx_vocab()
+    # binyan_dict = hebrew_processor.get_binyan2idx_vocab()
+    #
+    # x_dev, y_dev_pos, y_dev_binyan = hebrew_processor.preprocess_sample(HEBREW_TEST_PATH)
+    # x_dev = hebrew_processor.transform_to_one_hot(x_dev, len(word_dict))
+    # y_dev_pos = hebrew_processor.transform_to_one_hot(y_dev_pos, len(tag_dict))
+    # y_dev_binyan = hebrew_processor.transform_to_one_hot(y_dev_binyan, len(binyan_dict))
+    #
+    # # x_test, y_pos, y_binyan = hebrew_processor.preprocess_sample(HEBREW_TEST_PATH)
+    # # x_test = hebrew_processor.transform_to_one_hot(x_test, len(word_dict))
+    # # y_pos = hebrew_processor.transform_to_one_hot(y_pos, len(tag_dict))
+    # # y_binyan = hebrew_processor.transform_to_one_hot(y_binyan, len(binyan_dict))
+    #
+    # model = MTLHebrewBinyanTagger(hebrew_processor, immediate_build=False)
+    # model.load_model_params('../datasets/hebrew_binyan-2018-08-04 15:46:00.h5')
+    #
+    # print(model.evaluate_sample(x_dev, [y_dev_pos, y_dev_binyan]))
+    # print(model.model.metrics_names)
+    #
+    # print(model.evaluate_sample_conditioned(x_dev, y_dev_pos, 'unseen'))
 
 
 
