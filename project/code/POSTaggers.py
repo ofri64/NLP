@@ -10,7 +10,8 @@ import os
 
 
 def modelpath(subpath=''):
-    return os.path.dirname(__file__) + '/../models/' + subpath
+    path = os.path.join(os.path.dirname(__file__), os.pardir, 'models', subpath)
+    return os.path.abspath(path)
 
 
 def base_network(input_length, vocab_size, embed_size, padding_index, dropout_rate=.5, hidden_size=100):
