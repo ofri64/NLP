@@ -2,6 +2,7 @@ from keras.callbacks import Callback
 from keras.callbacks import  ModelCheckpoint
 import requests
 
+
 class CloudCallback(Callback):
     def __init__(self, remote=False, slack_url='', stop_url=''):
         super(CloudCallback, self).__init__()

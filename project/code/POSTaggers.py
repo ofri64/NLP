@@ -52,10 +52,11 @@ def build_model(input_layer, bilstm, hidden_size, n_pos, *outputs_list, **output
 class KerasPOSTagger(POSTaggerInterface):
 
     def __init__(self, data_processor, embed_size=50, hidden_size=100, batch_size=32, n_epochs=10,
-                 dropout_rate=0.5, immediate_build=True):
+                 dropout_rate=0.5, immediate_build=True, name=None):
 
         self.model = None
         self.model_summary = None
+        self.name = 'my_cool_model' if not name else name
 
         self.data_processor = data_processor
         self.embed_size = embed_size
@@ -104,7 +105,7 @@ class KerasPOSTagger(POSTaggerInterface):
             self.build()
 
         if not name:
-            name = 'my_cool_model'
+            name = self.name
 
         # Add checkpoint to callbacks
         # now = str(datetime.now()).split('.')[0]

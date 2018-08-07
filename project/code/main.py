@@ -26,8 +26,34 @@ CURR_DIR = os.getcwd()
 VOCAB_PATH = os.path.join(CURR_DIR, "words_tags_dict.pickle")
 
 
-def train(processor, dataset):
-    pass
+def run(processor, tagger, train_path, test_path):
+    # processor = Processor()
+    processor.create_word_tags_dicts(HEBREW_TRAIN_PATH)
+    processor.process(train_path)  # TODO: implement
+    processor.save()  # TODO: implement
+    # hebrew_processor.load('hebrew_processor.pickle')
+    word_dict = hebrew_processor.get_word2idx_vocab()
+    tag_dict = hebrew_processor.get_tag2idx_vocab()
+    feature_dicts = processor.get_vocabs()  # TODO: implement
+
+    x_train, y_train, y_train_features = processor.preprocess_sample(train_path)
+    x_train = processor.transform_to_one_hot(x_train, len(word_dict))
+    y_train = processor.transform_to_one_hot(y_train, len(tag_dict))
+    y_train_features = [processor.transform_to_one_hot(y_train_feature, len(feature_dict)) for y_train_feature, feature_dict in zip(y_train_features, feature_dicts)]
+
+    x_test, y_test, y_test_features = processor.preprocess_sample(test_path)
+    x_test = processor.transform_to_one_hot(x_test, len(word_dict))
+    y_test = processor.transform_to_one_hot(y_test, len(tag_dict))
+    y_train_features = [processor.transform_to_one_hot(y_test_feature, len(feature_dict)) for y_test_feature, feature_dict in zip(y_test_features, feature_dicts)]
+
+
+    # model = Tagger(processor, n_epochs=10)
+    tagger.fit(x_train, [y_train] + y_train_features)
+
+    print(tagger.evaluate_sample(x_test, y_test))
+    print(tagger.model.metrics_names)
+
+    print(tagger.evaluate_sample_conditioned(x_test, y_test, 'unseen'))
 
 
 if __name__ == "__main__":
