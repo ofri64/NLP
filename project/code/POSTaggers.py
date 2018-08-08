@@ -10,8 +10,7 @@ import os
 
 
 def modelpath(subpath=''):
-    path = os.path.join(os.path.dirname(__file__), os.pardir, 'models', subpath)
-    return os.path.abspath(path)
+    return os.path.dirname(__file__) + '/../models/' + subpath
 
 
 def base_network(input_length, vocab_size, embed_size, padding_index, dropout_rate=.5, hidden_size=100):
@@ -52,7 +51,7 @@ def build_model(input_layer, bilstm, hidden_size, n_pos, *outputs_list, **output
 class KerasPOSTagger(POSTaggerInterface):
 
     def __init__(self, data_processor, embed_size=50, hidden_size=100, batch_size=32, n_epochs=10,
-                 dropout_rate=0.5, immediate_build=True, name=None):
+                 dropout_rate=0.5, immediate_build=False, name=None):
 
         self.model = None
         self.model_summary = None
@@ -77,9 +76,9 @@ class KerasPOSTagger(POSTaggerInterface):
 
     def build(self, optimizer='adam', metrics=['accuracy']):
         # Receive data information from processor
-        word_vocab = self.data_processor.get_word2idx_vocab()
+        word_vocab = self.data_processor.get_word2idx_dict()
         vocab_size = len(word_vocab)
-        n_classes = len(self.data_processor.get_tag2idx_vocab())
+        n_classes = len(self.data_processor.get_tag2idx_dict())
         padding_index = word_vocab["PADD"]
         input_length = self.data_processor.get_max_sequence_length()
 

@@ -106,3 +106,10 @@ ENV/
 # datasets
 .conll
 .conllu
+
+# config file
+config.py
+
+#models
+project/models
+project/pickles
