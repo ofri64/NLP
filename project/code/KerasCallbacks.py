@@ -25,8 +25,8 @@ class CloudCallback(Callback):
         self.send_update('Training POS LSTM model has just started :weight_lifter:')
 
     def on_epoch_end(self, epoch, logs={}):
-        loss = logs.get('loss')
-        acc = logs.get('acc')
+        loss = logs.get('pos_loss') or logs.get('loss')
+        acc = logs.get('pos_acc') or logs.get('acc')
 
         self.send_update('*Epoch {0} has ended*! Loss: `{1}` - Accuracy: `{2}`'.format(epoch + 1, loss, acc))
 

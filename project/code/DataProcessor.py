@@ -14,7 +14,7 @@ def pickle_path(name):
     return os.path.abspath(path)
 
 
-class DataProcessorInterface:
+class DataProcessor(object):
 
     def __init__(self, max_seq_len=40, rare_word_threshold=1, name='my_cool_processor'):
         self.word2idx = None
@@ -160,7 +160,7 @@ class DataProcessorInterface:
                     features_dict[k].add(v)
 
         tags = list(tags) + [PADD]
-        features_dict = {k: list(v) + [NO_VALUE, PADD] for k, v in features_dict.items()}
+        features_dict = {k.lower(): list(v) + [NO_VALUE, PADD] for k, v in features_dict.items()}
 
         # Initiate word-to-index and tag-to-index and features-to-index dictionaries
         self._init_word2idx_dict(words)

@@ -48,7 +48,7 @@ def build_model(input_layer, bilstm, hidden_size, n_pos, *outputs_list, **output
 # self.build_and_compile()
 
 
-class KerasPOSTagger(POSTaggerInterface):
+class SimpleTagger(POSTaggerInterface):
 
     def __init__(self, data_processor, embed_size=50, hidden_size=100, batch_size=32, n_epochs=10,
                  dropout_rate=0.5, immediate_build=False, name=None):
@@ -76,10 +76,10 @@ class KerasPOSTagger(POSTaggerInterface):
 
     def build(self, optimizer='adam', metrics=['accuracy']):
         # Receive data information from processor
-        word_vocab = self.data_processor.get_word2idx_dict()
-        vocab_size = len(word_vocab)
+        word_dict = self.data_processor.get_word2idx_dict()
+        vocab_size = len(word_dict)
         n_classes = len(self.data_processor.get_tag2idx_dict())
-        padding_index = word_vocab["PADD"]
+        padding_index = word_dict['PADD']
         input_length = self.data_processor.get_max_sequence_length()
 
         # Define the Functional model
@@ -120,10 +120,12 @@ class KerasPOSTagger(POSTaggerInterface):
         self.model.fit(x_train, y_train, batch_size=self.batch_size, epochs=self.n_epochs, callbacks=callbacks)
 
     def evaluate_sample(self, x_test, y_test):
-        score = self.model.evaluate(x_test, y_test, batch_size=self.batch_size)
-        return score
+        model_outputs = self.model.evaluate(x_test, y_test, batch_size=self.batch_size)
+        model_outputs_names = self.model.metrics_names
+        return zip(model_outputs_names, model_outputs)
 
     def evaluate_sample_conditioned(self, x_test, y_test, condition):
+        y_test = y_test[0]
         x_unseen_test = []
         y_unseen_test = []
         x_test_indices = self.data_processor.transform_to_index(x_test)
@@ -171,20 +173,23 @@ class KerasPOSTagger(POSTaggerInterface):
         self.model = load_model(file_path)
 
 
-class MTLHebrewBinyanTagger(KerasPOSTagger):
-    def __init__(self, data_processor, embed_size=50, hidden_size=100, batch_size=32,
+class MTLOneFeatureTagger(SimpleTagger):
+    def __init__(self, data_processor, feature, embed_size=50, hidden_size=100, batch_size=32,
                  n_epochs=10,
-                 dropout_rate=0.5, immediate_build=True):
-        super(MTLHebrewBinyanTagger, self).__init__(data_processor, embed_size, hidden_size, batch_size, n_epochs,
-                                                    dropout_rate, immediate_build)
+                 dropout_rate=0.5, immediate_build=False, name=None):
+        super(MTLOneFeatureTagger, self).__init__(data_processor, embed_size, hidden_size, batch_size, n_epochs,
+                                                  dropout_rate, immediate_build)
+
+        self.feature = feature
+        self.name = 'mtl' + feature
 
     def build(self, optimizer='adam', metrics=['accuracy']):
         # Receive data information from processor
-        word_vocab = self.data_processor.get_word2idx_vocab()
-        vocab_size = len(word_vocab)
-        n_classes = len(self.data_processor.get_tag2idx_vocab())
-        n_binyans = len(self.data_processor.get_binyan2idx_vocab())
-        padding_index = word_vocab["PADD"]
+        word_dict = self.data_processor.get_word2idx_dict()
+        vocab_size = len(word_dict)
+        n_classes = len(self.data_processor.get_tag2idx_dict())
+        n_feature_values = len(self.data_processor.get_features2idx_dicts()[self.feature])
+        padding_index = word_dict['PADD']
         input_length = self.data_processor.get_max_sequence_length()
 
         sent_input = Input(shape=(input_length, vocab_size,))
@@ -195,22 +200,12 @@ class MTLHebrewBinyanTagger(KerasPOSTagger):
         dropout = Dropout(self.dropout_rate)(masking)
         hidden1 = Bidirectional(LSTM(units=self.hidden_size, return_sequences=True))(dropout)
 
-        binyan_output = Dense(units=n_binyans, activation='softmax', name='binyan')(hidden1)
-        # binyan_model = Model(inputs=sent_input, outputs=binyan_output)
+        feature_output = Dense(units=n_feature_values, activation='softmax', name=self.feature)(hidden1)
 
         hidden2 = Bidirectional(LSTM(units=self.hidden_size, return_sequences=True))(hidden1)
         pos_output = Dense(units=n_classes, activation='softmax', name='pos')(hidden2)
-        # pos_model = Model(inputs=sent_input, outputs=pos_output)
 
-        # self.model = [binyan_model, pos_model]
-
-        # for m in self.model:
-        #     m.compile(loss='categorical_crossentropy',
-        #               optimizer=optimizer,
-        #               metrics=metrics)
-        #     print(m.summary())
-
-        self.model = Model(inputs=sent_input, outputs=[pos_output, binyan_output])
+        self.model = Model(inputs=sent_input, outputs=[pos_output, feature_output])
         self.model.compile(loss='categorical_crossentropy',
                            optimizer=optimizer,
                            metrics=metrics)
