@@ -106,14 +106,6 @@ class KerasPOSTagger(POSTaggerInterface):
         if not name:
             name = self.name
 
-        # Add checkpoint to callbacks
-        # now = str(datetime.now()).split('.')[0]
-        # saver_callback = CheckpointCallback('../models/{0}/{0}-{1}.h5'.format(name, now)).get_callback()
-        # if callbacks is None:
-        #     callbacks = [checkpoint]
-        # else:
-        #     callbacks.append(checkpoint)
-
         if not os.path.exists(modelpath(name)):
             os.mkdir(modelpath(name))
 

@@ -16,7 +16,7 @@ def pickle_path(name):
 
 class DataProcessorInterface:
 
-    def __init__(self, max_seq_len=None, rare_word_threshold=1, name='my_cool_processor'):
+    def __init__(self, max_seq_len=40, rare_word_threshold=1, name='my_cool_processor'):
         self.word2idx = None
         self.tag2idx = None
         self.features2idx = None
@@ -81,7 +81,7 @@ class DataProcessorInterface:
 
         # and also the UNK and PADD symbols
         words.append("UNK")
-        words.append("PADD")
+        words.append(PADD)
 
         # transform words to indices
         word2idx = {w: idx for idx, w in enumerate(words)}
