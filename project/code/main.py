@@ -1,7 +1,10 @@
 import os
-from POSTaggers import SimpleTagger, MTLOneFeatureTagger
-from DataProcessor import DataProcessor
+import argparse
+
 from config import *
+
+from DataProcessor import DataProcessor
+from POSTaggers import SimpleTagger, MTLOneFeatureTagger
 from KerasCallbacks import CloudCallback
 
 
@@ -21,8 +24,9 @@ def model_path(subpath):
     return os.path.abspath(path)
 
 
-def run(processor, tagger, train_path, test_path, load_processor_from=None, load_tagger_from=None, features=None):
-    cb = CloudCallback(remote=False, slack_url=slack_url, stop_url=stop_url)
+def run_experiment(processor, tagger, train_path, test_path, load_processor_from=None, load_tagger_from=None,
+                   features=None, remote=False):
+    cb = CloudCallback(remote=remote, slack_url=slack_url, stop_url=stop_url)
 
     if type(features) is str:
         features = [features]
@@ -77,7 +81,7 @@ def run(processor, tagger, train_path, test_path, load_processor_from=None, load
         print_str = ""
         for metric, value in metrics_output:
             if "acc" in metric:
-                print_str +=  "{0}: {1} ".format(metric, value)
+                print_str += "{0}: {1} ".format(metric, value)
         cb.send_update('*Regular evaluation has ended!*`' + print_str)
 
         # Evaluate unseen results
@@ -93,17 +97,38 @@ def run(processor, tagger, train_path, test_path, load_processor_from=None, load
         cb.stop_instance()
 
 
-if __name__ == "__main__":
-    language = 'spanish'
-    feature = 'gender'
-
+def main(language, feature, n_epochs, remote, features):
     train_path, test_path = datasets_paths(language)
 
-    processor = DataProcessor(name='{0}_{1}'.format(language, feature))
-    tagger = MTLOneFeatureTagger(processor, n_epochs=1, feature=feature)
-    run(processor, tagger, train_path, test_path, features=feature)
+    if features:
+        import pandas as pd
+        dp = DataProcessor()
+        dp.process(train_path)
+        available_features = dp.get_features()
+        print('\r\nAvailable features')
+        print('------------------')
+        print(pd.DataFrame(available_features))
+        print('\r\n')
+        return
 
-    # processor = DataProcessor(name=language)
-    # tagger = SimpleTagger(processor, n_epochs=1)
-    # run(processor, tagger, train_path, test_path)
+    if feature:
+        processor = DataProcessor(name='{0}_{1}'.format(language, feature))
+        tagger = MTLOneFeatureTagger(processor, n_epochs=n_epochs, feature=feature)
+    else:
+        processor = DataProcessor(name=language)
+        tagger = SimpleTagger(processor, n_epochs=n_epochs)
 
+    run_experiment(processor, tagger, train_path, test_path, remote=remote)
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument('language', help='language to experiment on')
+    parser.add_argument('-f', '--feature', help='feature to experiment on')
+    parser.add_argument('-e', '--n_epochs', help='number of epochs to run', type=int, default=10)
+    parser.add_argument('-r', '--remote', help='run remotely on the configured gcloud vm', action='store_true')
+    parser.add_argument('-a', '--features', help='get all features of the given language', action='store_true')
+
+    args = parser.parse_args()
+
+    main(args.language, args.feature, args.n_epochs, args.remote, args.features)

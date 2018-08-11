@@ -203,6 +203,9 @@ class DataProcessor(object):
             self.idx2tag = {idx: tag for tag, idx in self.tag2idx.items()}
         return self.idx2tag
 
+    def get_features(self):
+        return list(self.features2idx.keys())
+
     # def preprocess_sample(self, file_path):
     #     """
     #     Processes a sample set from a given file path

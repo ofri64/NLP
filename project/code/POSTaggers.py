@@ -4,7 +4,7 @@ from KerasCallbacks import CheckpointCallback
 from keras.callbacks import ModelCheckpoint
 from keras.models import Model, load_model
 from keras.layers import Dense, LSTM, Dropout, Bidirectional, Masking, Input
-from _datetime import datetime
+from datetime import datetime
 import numpy as np
 import os
 

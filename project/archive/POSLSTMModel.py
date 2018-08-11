@@ -8,8 +8,8 @@ from keras.callbacks import Callback
 TRAIN_PATH = 'datasets/english/train.gold.conll'
 TEST_PATH = 'datasets/english/dev.gold.conll'
 
-HEB_TRAIN_PATH = 'datasets/hebrew/he_htb-ud-train.conllu'
-HEB_TEST_PATH = 'hebrew/he_htb-ud-test.conllu'
+HEB_TRAIN_PATH = 'datasets/hebrew/train.conllu'
+HEB_TEST_PATH = 'hebrew/test.conllu'
 
 
 class CloudCallback(Callback):
