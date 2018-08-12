@@ -25,8 +25,8 @@ def model_path(subpath):
 
 
 def run_experiment(processor, tagger, train_path, test_path, load_processor_from=None, load_tagger_from=None,
-                   features=None, remote=False):
-    cb = CloudCallback(remote=remote, slack_url=slack_url, stop_url=stop_url)
+                   features=None, remote=False, remote_stop=False):
+    cb = CloudCallback(remote=remote, slack_url=slack_url, stop_url=stop_url if remote_stop else '')
 
     if type(features) is str:
         features = [features]
@@ -97,7 +97,7 @@ def run_experiment(processor, tagger, train_path, test_path, load_processor_from
         cb.stop_instance()
 
 
-def main(language, feature, n_epochs, remote, features):
+def main(language, feature, n_epochs, remote, features, remote_stop):
     train_path, test_path = datasets_paths(language)
 
     if features:
@@ -118,7 +118,7 @@ def main(language, feature, n_epochs, remote, features):
         processor = DataProcessor(name=language)
         tagger = SimpleTagger(processor, n_epochs=n_epochs)
 
-    run_experiment(processor, tagger, train_path, test_path, remote=remote)
+    run_experiment(processor, tagger, train_path, test_path, remote=remote, remote_stop=remote_stop)
 
 
 if __name__ == "__main__":
@@ -128,7 +128,8 @@ if __name__ == "__main__":
     parser.add_argument('-e', '--n_epochs', help='number of epochs to run', type=int, default=10)
     parser.add_argument('-r', '--remote', help='run remotely on the configured gcloud vm', action='store_true')
     parser.add_argument('-a', '--features', help='get all features of the given language', action='store_true')
+    parser.add_argument('-s', '--stop', help='stop the instance upon finish', action='store_true')
 
     args = parser.parse_args()
 
-    main(args.language, args.feature, args.n_epochs, args.remote, args.features)
+    main(args.language, args.feature, args.n_epochs, args.remote, args.features, args.stop)

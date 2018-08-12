@@ -11,13 +11,13 @@ class CloudCallback(Callback):
         self.stop_url = stop_url
 
     def stop_instance(self):
-        if self.remote:
+        if self.remote and self.stop_url:
             self.send_update('Stopping instance, bye bye')
             requests.get(self.stop_url)
 
     def send_update(self, msg):
         print(msg)
-        if self.remote:
+        if self.remote and self.slack_url:
             payload = {'message': msg, 'channel': 'nlp'}
             requests.post(self.slack_url, json=payload)
 

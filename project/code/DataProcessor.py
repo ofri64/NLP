@@ -122,7 +122,7 @@ class DataProcessor(object):
         """
 
         sents = []
-        with open(path, "r") as f:
+        with open(path, encoding='utf-8', mode='r') as f:
             curr = []
             for line in f:
                 line = line.strip()
