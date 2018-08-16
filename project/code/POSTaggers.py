@@ -51,11 +51,11 @@ def build_model(input_layer, bilstm, hidden_size, n_pos, *outputs_list, **output
 class SimpleTagger(POSTaggerInterface):
 
     def __init__(self, data_processor, embed_size=50, hidden_size=100, batch_size=32, n_epochs=10,
-                 dropout_rate=0.5, immediate_build=False, name=None):
+                 dropout_rate=0.5, immediate_build=False):
 
         self.model = None
         self.model_summary = None
-        self.name = 'my_cool_model' if not name else name
+        self.name = 'lstm_' + data_processor.get_name()
 
         self.data_processor = data_processor
         self.embed_size = embed_size
@@ -176,12 +176,12 @@ class SimpleTagger(POSTaggerInterface):
 class MTLOneFeatureTagger(SimpleTagger):
     def __init__(self, data_processor, feature, embed_size=50, hidden_size=100, batch_size=32,
                  n_epochs=10,
-                 dropout_rate=0.5, immediate_build=False, name=None):
+                 dropout_rate=0.5, immediate_build=False):
         super(MTLOneFeatureTagger, self).__init__(data_processor, embed_size, hidden_size, batch_size, n_epochs,
                                                   dropout_rate, immediate_build)
 
         self.feature = feature
-        self.name = 'mtl' + feature
+        self.name = 'mtl_one_' + data_processor.get_name()
 
     def build(self, optimizer='adam', metrics=['accuracy']):
         # Receive data information from processor

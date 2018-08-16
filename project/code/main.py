@@ -25,7 +25,7 @@ def model_path(subpath):
 
 
 def run_experiment(processor, tagger, train_path, test_path, load_processor_from=None, load_tagger_from=None,
-                   features=None, remote=False, remote_stop=False):
+                   features=None, name='experiment', remote=False, remote_stop=False):
     cb = CloudCallback(remote=remote, slack_url=slack_url, stop_url=stop_url if remote_stop else '')
 
     if type(features) is str:
@@ -82,7 +82,8 @@ def run_experiment(processor, tagger, train_path, test_path, load_processor_from
         for metric, value in metrics_output:
             if "acc" in metric:
                 print_str += "{0}: {1} ".format(metric, value)
-        cb.send_update('*Regular evaluation has ended!*`' + print_str)
+        cb.send_update('Results for: *{0}*'.format(name))
+        cb.send_update('*Regular evaluation has ended!*' + print_str)
 
         # Evaluate unseen results
         unseen_acc = tagger.evaluate_sample_conditioned(x_test, [y_test] + y_test_features, 'unseen')
@@ -99,6 +100,7 @@ def run_experiment(processor, tagger, train_path, test_path, load_processor_from
 
 def main(language, feature, n_epochs, remote, features, remote_stop):
     train_path, test_path = datasets_paths(language)
+    experiment_name = ''
 
     if features:
         import pandas as pd
@@ -112,13 +114,16 @@ def main(language, feature, n_epochs, remote, features, remote_stop):
         return
 
     if feature:
-        processor = DataProcessor(name='{0}_{1}'.format(language, feature))
+        experiment_name = '{0}_{1}'.format(language, feature)
+        processor = DataProcessor(name=experiment_name)
         tagger = MTLOneFeatureTagger(processor, n_epochs=n_epochs, feature=feature)
     else:
-        processor = DataProcessor(name=language)
+        experiment_name = language
+        processor = DataProcessor(name=experiment_name)
         tagger = SimpleTagger(processor, n_epochs=n_epochs)
 
-    run_experiment(processor, tagger, train_path, test_path, remote=remote, remote_stop=remote_stop)
+    run_experiment(processor, tagger, train_path, test_path, name=experiment_name,
+                   remote=remote, remote_stop=remote_stop)
 
 
 if __name__ == "__main__":

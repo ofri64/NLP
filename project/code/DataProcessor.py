@@ -206,6 +206,9 @@ class DataProcessor(object):
     def get_features(self):
         return list(self.features2idx.keys())
 
+    def get_name(self):
+        return self.name
+
     # def preprocess_sample(self, file_path):
     #     """
     #     Processes a sample set from a given file path
