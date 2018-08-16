@@ -1,5 +1,6 @@
 import os
 import argparse
+import numpy as np
 
 from config import *
 
@@ -7,6 +8,7 @@ from DataProcessor import DataProcessor
 from POSTaggers import SimpleTagger, MTLOneFeatureTagger
 from KerasCallbacks import CloudCallback
 
+LOG_FILE = 'experiments.log'
 
 def datasets_paths(language):
     language_train_path = os.path.join(os.path.dirname(__file__), os.pardir, 'datasets', language, 'train.conllu')
@@ -22,6 +24,14 @@ def pickle_path(name):
 def model_path(subpath):
     path = os.path.join(os.path.dirname(__file__), os.pardir, 'models', subpath)
     return os.path.abspath(path)
+
+
+def log_experiment(experiment_name, acc, unseen_acc):
+    with open(LOG_FILE, "a+") as logfile:
+        logfile.write('-----------\n')
+        logfile.write('Experiment: {0}\nAccuracy: {1}\nUnseen Accuracy: {2}\n'
+                      .format(experiment_name, acc, unseen_acc))
+        logfile.write('-----------\n\n')
 
 
 def run_experiment(processor, tagger, train_path, test_path, load_processor_from=None, load_tagger_from=None,
@@ -79,15 +89,20 @@ def run_experiment(processor, tagger, train_path, test_path, load_processor_from
         cb.send_update('Evaluation has just started.')
         metrics_output = tagger.evaluate_sample(x_test, [y_test] + y_test_features)
         print_str = ""
+        acc = None
         for metric, value in metrics_output:
             if "acc" in metric:
+                acc = value
                 print_str += "{0}: {1} ".format(metric, value)
+
         cb.send_update('Results for: *{0}*'.format(name))
         cb.send_update('*Regular evaluation has ended!*' + print_str)
 
         # Evaluate unseen results
         unseen_acc = tagger.evaluate_sample_conditioned(x_test, [y_test] + y_test_features, 'unseen')
         cb.send_update('*Unseen Evaluation has ended!* Accuracy: `{0}`'.format(unseen_acc))
+
+        return acc, unseen_acc
 
     except Exception as e:
         cb.send_update(repr(e))
@@ -98,9 +113,8 @@ def run_experiment(processor, tagger, train_path, test_path, load_processor_from
         cb.stop_instance()
 
 
-def main(language, feature, n_epochs, remote, features, remote_stop):
+def main(language, feature, n_epochs, times, remote, features, remote_stop):
     train_path, test_path = datasets_paths(language)
-    experiment_name = ''
 
     if features:
         import pandas as pd
@@ -122,8 +136,22 @@ def main(language, feature, n_epochs, remote, features, remote_stop):
         processor = DataProcessor(name=experiment_name)
         tagger = SimpleTagger(processor, n_epochs=n_epochs)
 
-    run_experiment(processor, tagger, train_path, test_path, name=experiment_name,
-                   remote=remote, remote_stop=remote_stop)
+    if times == 1:
+        acc, unseen_acc = run_experiment(processor, tagger, train_path, test_path, name=experiment_name,
+                                         remote=remote, remote_stop=remote_stop)
+        log_experiment(experiment_name, acc, unseen_acc)
+    else:
+        all_acc, all_unseen_acc = 0, 0
+        for i in range(times):
+            experiment_name = experiment_name + '_' + str(i)
+            acc, unseen_acc = run_experiment(processor, tagger, train_path, test_path, name=experiment_name,
+                                             remote=remote, remote_stop=remote_stop)
+            all_acc += acc
+            all_unseen_acc += unseen_acc
+
+        avg_acc = np.divide(all_acc, times)
+        avg__unseen_acc = np.divide(all_unseen_acc, times)
+        log_experiment(experiment_name, avg_acc, avg__unseen_acc)
 
 
 if __name__ == "__main__":
@@ -131,10 +159,11 @@ if __name__ == "__main__":
     parser.add_argument('language', help='language to experiment on')
     parser.add_argument('-f', '--feature', help='feature to experiment on')
     parser.add_argument('-e', '--n_epochs', help='number of epochs to run', type=int, default=10)
+    parser.add_argument('-x', '--times', help='number of times to average the experiment', type=int, default=1)
     parser.add_argument('-r', '--remote', help='run remotely on the configured gcloud vm', action='store_true')
     parser.add_argument('-a', '--features', help='get all features of the given language', action='store_true')
     parser.add_argument('-s', '--stop', help='stop the instance upon finish', action='store_true')
 
     args = parser.parse_args()
 
-    main(args.language, args.feature, args.n_epochs, args.remote, args.features, args.stop)
+    main(args.language, args.feature, args.n_epochs, args.times, args.remote, args.features, args.stop)

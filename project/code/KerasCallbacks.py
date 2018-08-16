@@ -1,5 +1,5 @@
 from keras.callbacks import Callback
-from keras.callbacks import  ModelCheckpoint
+from keras.callbacks import ModelCheckpoint
 import requests
 
 
