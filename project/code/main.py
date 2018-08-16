@@ -117,6 +117,7 @@ def run_experiment(processor, tagger, train_path, test_path, load_processor_from
 def main(language, feature, n_epochs, times, remote, features, remote_stop):
     train_path, test_path = datasets_paths(language)
 
+
     if features:
         import pandas as pd
         dp = DataProcessor()
@@ -138,15 +139,24 @@ def main(language, feature, n_epochs, times, remote, features, remote_stop):
         tagger = SimpleTagger(processor, n_epochs=n_epochs)
 
     if times == 1:
-        acc, unseen_acc = run_experiment(processor, tagger, train_path, test_path, name=experiment_name,
-                                         remote=remote, remote_stop=remote_stop)
+        if feature:
+            acc, unseen_acc = run_experiment(processor, tagger, train_path, test_path, features=[feature],
+                                             name=experiment_name, remote=remote, remote_stop=remote_stop)
+        else:
+            acc, unseen_acc = run_experiment(processor, tagger, train_path, test_path, name=experiment_name,
+                                             remote=remote, remote_stop=remote_stop)
         log_experiment(experiment_name, acc, unseen_acc)
     else:
         all_acc, all_unseen_acc = 0, 0
         for i in range(times):
             experiment_i_name = experiment_name + '_' + str(i+1)
-            acc, unseen_acc = run_experiment(processor, tagger, train_path, test_path, name=experiment_i_name,
-                                             remote=remote, remote_stop=remote_stop)
+            if feature:
+                acc, unseen_acc = run_experiment(processor, tagger, train_path, test_path, features=[feature],
+                                                 name=experiment_i_name, remote=remote, remote_stop=remote_stop)
+            else:
+                acc, unseen_acc = run_experiment(processor, tagger, train_path, test_path,
+                                                 name=experiment_i_name, remote=remote, remote_stop=remote_stop)
+
             all_acc += acc
             all_unseen_acc += unseen_acc
 
