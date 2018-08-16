@@ -144,8 +144,8 @@ def main(language, feature, n_epochs, times, remote, features, remote_stop):
     else:
         all_acc, all_unseen_acc = 0, 0
         for i in range(times):
-            experiment_name = experiment_name + '_' + str(i)
-            acc, unseen_acc = run_experiment(processor, tagger, train_path, test_path, name=experiment_name,
+            experiment_i_name = experiment_name + '_' + str(i+1)
+            acc, unseen_acc = run_experiment(processor, tagger, train_path, test_path, name=experiment_i_name,
                                              remote=remote, remote_stop=remote_stop)
             all_acc += acc
             all_unseen_acc += unseen_acc
