@@ -10,6 +10,7 @@ from KerasCallbacks import CloudCallback
 
 LOG_FILE = 'experiments.log'
 
+
 def datasets_paths(language):
     language_train_path = os.path.join(os.path.dirname(__file__), os.pardir, 'datasets', language, 'train.conllu')
     language_test_path = os.path.join(os.path.dirname(__file__), os.pardir, 'datasets', language, 'test.conllu')
@@ -96,7 +97,7 @@ def run_experiment(processor, tagger, train_path, test_path, load_processor_from
                 print_str += "{0}: {1} ".format(metric, value)
 
         cb.send_update('Results for: *{0}*'.format(name))
-        cb.send_update('*Regular evaluation has ended!*' + print_str)
+        cb.send_update('*Regular evaluation has ended!* ' + print_str)
 
         # Evaluate unseen results
         unseen_acc = tagger.evaluate_sample_conditioned(x_test, [y_test] + y_test_features, 'unseen')
