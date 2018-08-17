@@ -138,7 +138,7 @@ class DataProcessor(object):
                     if '-' in index or index[0] == '#':
                         continue
 
-                    word, pos_tag, raw_features = tokens[1], tokens[4], tokens[5]
+                    word, pos_tag, raw_features = tokens[1], tokens[3], tokens[5]
                     features = {}
                     if raw_features != '_':
                         features = {k: v for k, v in [rf.split('=') for rf in raw_features.split('|')]}
