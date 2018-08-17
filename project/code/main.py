@@ -93,7 +93,8 @@ def run_experiment(processor, tagger, train_path, test_path, load_processor_from
         acc = None
         for metric, value in metrics_output:
             if "acc" in metric:
-                acc = value
+                if acc is None:  # only update the first acc
+                    acc = value
                 print_str += "{0}: {1} ".format(metric, value)
 
         cb.send_update('Results for: *{0}*'.format(name))
@@ -116,7 +117,6 @@ def run_experiment(processor, tagger, train_path, test_path, load_processor_from
 
 def main(language, feature, n_epochs, times, remote, features, remote_stop):
     train_path, test_path = datasets_paths(language)
-
 
     if features:
         import pandas as pd
