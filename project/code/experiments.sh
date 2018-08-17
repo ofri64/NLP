@@ -42,4 +42,4 @@ python3 main.py chinese -r -f case 10 &&
 python3 main.py chinese -r -f aspect 10 &&
 python3 main.py chinese -r -f polarity 10 &&
 python3 main.py chinese -r -f voice 10 &&
-python3 main.py chinese -r -f mood 10 &&
+python3 main.py chinese -r -f mood 10
