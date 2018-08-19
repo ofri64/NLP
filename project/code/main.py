@@ -5,7 +5,7 @@ import numpy as np
 from config import *
 
 from DataProcessor import DataProcessor
-from POSTaggers import SimpleTagger, MTLOneFeatureTagger
+from POSTaggers import SimpleTagger, MTLOneFeatureTagger, MTLAllFeaturesTagger
 from KerasCallbacks import CloudCallback
 
 LOG_FILE = 'experiments.log'
@@ -36,13 +36,14 @@ def log_experiment(experiment_name, acc, unseen_acc):
 
 
 def run_experiment(processor, tagger, train_path, test_path, load_processor_from=None, load_tagger_from=None,
-                   features=None, name='experiment', remote=False, remote_stop=False):
+                   features=None, name='experiment', remote=False, remote_stop=False, _all=False):
     cb = CloudCallback(remote=remote, slack_url=slack_url, stop_url=stop_url if remote_stop else '')
 
-    if type(features) is str:
-        features = [features]
-    elif not features:
-        features = []
+    if not _all:
+        if type(features) is str:
+            features = [features]
+        elif not features:
+            features = []
 
     try:
         # Initiate processor
@@ -50,6 +51,8 @@ def run_experiment(processor, tagger, train_path, test_path, load_processor_from
             processor.load(load_processor_from)
         else:
             processor.process(train_path)
+            if _all:
+                features = processor.get_features()
             processor.save()
 
         word_dict = processor.get_word2idx_dict()
@@ -115,7 +118,7 @@ def run_experiment(processor, tagger, train_path, test_path, load_processor_from
         cb.stop_instance()
 
 
-def main(language, feature, n_epochs, times, remote, features, remote_stop):
+def main(language, feature, n_epochs, times, remote, features, remote_stop, _all, hidden_size):
     train_path, test_path = datasets_paths(language)
 
     if features:
@@ -129,17 +132,24 @@ def main(language, feature, n_epochs, times, remote, features, remote_stop):
         print('\r\n')
         return
 
-    if feature:
+    if _all:
+        experiment_name = '{0}_all'.format(language)
+        processor = DataProcessor(name=experiment_name)
+        tagger = MTLAllFeaturesTagger(processor, n_epochs=n_epochs, hidden_size=hidden_size)
+    elif feature:
         experiment_name = '{0}_{1}'.format(language, feature)
         processor = DataProcessor(name=experiment_name)
-        tagger = MTLOneFeatureTagger(processor, n_epochs=n_epochs, feature=feature)
+        tagger = MTLOneFeatureTagger(processor, n_epochs=n_epochs, feature=feature, hidden_size=hidden_size)
     else:
         experiment_name = language
         processor = DataProcessor(name=experiment_name)
-        tagger = SimpleTagger(processor, n_epochs=n_epochs)
+        tagger = SimpleTagger(processor, n_epochs=n_epochs, hidden_size=hidden_size)
 
     if times == 1:
-        if feature:
+        if _all:
+            acc, unseen_acc = run_experiment(processor, tagger, train_path, test_path,
+                                             name=experiment_name, remote=remote, remote_stop=remote_stop, _all=True)
+        elif feature:
             acc, unseen_acc = run_experiment(processor, tagger, train_path, test_path, features=[feature],
                                              name=experiment_name, remote=remote, remote_stop=remote_stop)
         else:
@@ -149,8 +159,12 @@ def main(language, feature, n_epochs, times, remote, features, remote_stop):
     else:
         all_acc, all_unseen_acc = 0, 0
         for i in range(times):
-            experiment_i_name = experiment_name + '_' + str(i+1)
-            if feature:
+            experiment_i_name = experiment_name + '_' + str(i + 1)
+            if _all:
+                acc, unseen_acc = run_experiment(processor, tagger, train_path, test_path,
+                                                 name=experiment_i_name, remote=remote, remote_stop=remote_stop,
+                                                 _all=True)
+            elif feature:
                 acc, unseen_acc = run_experiment(processor, tagger, train_path, test_path, features=[feature],
                                                  name=experiment_i_name, remote=remote, remote_stop=remote_stop)
             else:
@@ -172,9 +186,12 @@ if __name__ == "__main__":
     parser.add_argument('-e', '--n_epochs', help='number of epochs to run', type=int, default=10)
     parser.add_argument('-x', '--times', help='number of times to average the experiment', type=int, default=1)
     parser.add_argument('-r', '--remote', help='run remotely on the configured gcloud vm', action='store_true')
-    parser.add_argument('-a', '--features', help='get all features of the given language', action='store_true')
+    parser.add_argument('-fs', '--features', help='get all features of the given language', action='store_true')
     parser.add_argument('-s', '--stop', help='stop the instance upon finish', action='store_true')
+    parser.add_argument('-a', '--all', help='', action='store_true')
+    parser.add_argument('-hs', '--hidden_size', help='number of epochs to run', type=int, default=100)
 
     args = parser.parse_args()
 
-    main(args.language, args.feature, args.n_epochs, args.times, args.remote, args.features, args.stop)
+    main(args.language, args.feature, args.n_epochs, args.times, args.remote, args.features, args.stop, args.all,
+         args.hidden_size)

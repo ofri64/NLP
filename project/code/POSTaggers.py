@@ -193,12 +193,10 @@ class MTLOneFeatureTagger(SimpleTagger):
         input_length = self.data_processor.get_max_sequence_length()
 
         sent_input = Input(shape=(input_length, vocab_size,))
-        # task_input = Input(shape=(1, ))
-
         embedding = Dense(units=self.embed_size)(sent_input)
         masking = Masking(mask_value=padding_index)(embedding)
         dropout = Dropout(self.dropout_rate)(masking)
-        hidden1 = Bidirectional(LSTM(units=self.hidden_size, return_sequences=True))(dropout)
+        hidden1 = Bidirectional(LSTM(units=10, return_sequences=True))(dropout)
 
         feature_output = Dense(units=n_feature_values, activation='softmax', name=self.feature)(hidden1)
 
@@ -213,4 +211,49 @@ class MTLOneFeatureTagger(SimpleTagger):
 
     def predict(self, sentences):
         pos_predictions, _ = self.model.predict(sentences)
+        return np.argmax(pos_predictions, axis=2)
+
+
+class MTLAllFeaturesTagger(SimpleTagger):
+    def __init__(self, data_processor, embed_size=50, hidden_size=100, batch_size=32,
+                 n_epochs=10,
+                 dropout_rate=0.5, immediate_build=False):
+        super(MTLAllFeaturesTagger, self).__init__(data_processor, embed_size, hidden_size, batch_size, n_epochs,
+                                                   dropout_rate, immediate_build)
+
+        self.name = 'mtl_one_' + data_processor.get_name()
+        self.pos_model = None
+
+    def build(self, optimizer='adam', metrics=['accuracy']):
+        # Receive data information from processor
+        word_dict = self.data_processor.get_word2idx_dict()
+        vocab_size = len(word_dict)
+        n_classes = len(self.data_processor.get_tag2idx_dict())
+        n_features_labels = {feature: len(d) for feature, d in self.data_processor.get_features2idx_dicts().items()}
+        padding_index = word_dict['PADD']
+        input_length = self.data_processor.get_max_sequence_length()
+
+        sent_input = Input(shape=(input_length, vocab_size,))
+        embedding = Dense(units=self.embed_size)(sent_input)
+        masking = Masking(mask_value=padding_index)(embedding)
+        dropout = Dropout(self.dropout_rate)(masking)
+        hidden1 = Bidirectional(LSTM(units=self.hidden_size, return_sequences=True))(dropout)
+
+        features_outputs = {f: Dense(units=n_labels, activation='softmax', name=f)(hidden1) for f, n_labels in
+                            n_features_labels.items()}
+
+        # hidden2 = Bidirectional(LSTM(units=self.hidden_size, return_sequences=True))(hidden1)
+        pos_output = Dense(units=n_classes, activation='softmax', name='pos')(hidden1)
+
+        self.model = Model(inputs=sent_input, outputs=[pos_output] + list(features_outputs.values()))
+        self.model.compile(loss='categorical_crossentropy',
+                           optimizer=optimizer,
+                           metrics=metrics)
+
+        self.pos_model = Model(inputs=sent_input, outputs=pos_output)
+
+        print(self.model.summary())
+
+    def predict(self, sentences):
+        pos_predictions = self.pos_model.predict(sentences)
         return np.argmax(pos_predictions, axis=2)
