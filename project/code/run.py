@@ -4,10 +4,10 @@ from subprocess import call
 from config import *
 
 
-def main(language, feature, n_epochs, remote, features, remote_update, remote_stop):
+def main(language, feature, n_epochs, times, remote, features, remote_update, remote_stop, _all, hidden_size):
     if not remote:
         import main as _main_
-        return _main_.main(language, feature, n_epochs, remote, features)
+        return _main_.main(language, feature, n_epochs, times, remote, features, False, _all, hidden_size)
 
     call('gcloud compute instances start --zone={zone} {vm}'.format(zone=gcloud_zone, vm=gcloud_vm), shell=True)
 
@@ -46,10 +46,13 @@ if __name__ == '__main__':
     parser.add_argument('-f', '--feature', help='feature to experiment on')
     parser.add_argument('-e', '--n_epochs', help='number of epochs to run', type=int, default=10)
     parser.add_argument('-r', '--remote', help='run remotely on the configured gcloud vm', action='store_true')
-    parser.add_argument('-a', '--features', help='get all features of the given language', action='store_true')
+    parser.add_argument('-fs', '--features', help='get all features of the given language', action='store_true')
     parser.add_argument('-u', '--update', help='update the remote code', action='store_true')
     parser.add_argument('-s', '--stop', help='stop the instance upon finish', action='store_true')
+    parser.add_argument('-a', '--all', help='to run with all available features', action='store_true')
+    parser.add_argument('-hs', '--hidden_size', help='number of epochs to run', type=int, default=100)
+    parser.add_argument('-x', '--times', help='number of experiments to run', type=int, default=1)
 
     args = parser.parse_args()
 
-    main(args.language, args.feature, args.n_epochs, args.remote, args.features, args.update, args.stop)
+    main(args.language, args.feature, args.n_epochs, args.times, args.remote, args.features, args.update, args.stop, args.all, args.hidden_size)
