@@ -244,3 +244,12 @@ class DataProcessor(object):
                                        value=feature2idx[PADD]) for k, feature2idx in self.features2idx.items()}
 
         return x, y, y_features
+
+    def preprocess_sentence(self, sent):
+        if type(sent) is str:
+            sent = sent.split(' ')
+        x = [[self.word2idx.get(w, self.word2idx[self._replace_rare_word(w)]) for w in sent]]
+        x = pad_sequences(maxlen=self.max_seq_len, sequences=x, padding="post", truncating="post",
+                          value=self.word2idx[PADD])
+
+        return x[0]
