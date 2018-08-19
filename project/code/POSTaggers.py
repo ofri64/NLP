@@ -237,13 +237,14 @@ class MTLAllFeaturesTagger(SimpleTagger):
         embedding = Dense(units=self.embed_size)(sent_input)
         masking = Masking(mask_value=padding_index)(embedding)
         dropout = Dropout(self.dropout_rate)(masking)
-        hidden1 = Bidirectional(LSTM(units=self.hidden_size, return_sequences=True))(dropout)
+        # hidden1 = Bidirectional(LSTM(units=self.hidden_size, return_sequences=True))(dropout)
+        hidden1 = Dense(units=self.hidden_size, activation='relu')(dropout)
 
         features_outputs = {f: Dense(units=n_labels, activation='softmax', name=f)(hidden1) for f, n_labels in
                             n_features_labels.items()}
 
-        # hidden2 = Bidirectional(LSTM(units=self.hidden_size, return_sequences=True))(hidden1)
-        pos_output = Dense(units=n_classes, activation='softmax', name='pos')(hidden1)
+        hidden2 = Bidirectional(LSTM(units=self.hidden_size, return_sequences=True))(hidden1)
+        pos_output = Dense(units=n_classes, activation='softmax', name='pos')(hidden2)
 
         self.model = Model(inputs=sent_input, outputs=[pos_output] + list(features_outputs.values()))
         self.model.compile(loss='categorical_crossentropy',
@@ -257,3 +258,23 @@ class MTLAllFeaturesTagger(SimpleTagger):
     def predict(self, sentences):
         pos_predictions = self.pos_model.predict(sentences)
         return np.argmax(pos_predictions, axis=2)
+
+    def predict_pos(self, raw_sent):
+        sent = raw_sent.split(' ')
+        sent_len = len(sent)
+        sent = self.data_processor.preprocess_sentence(sent)
+
+        onehot_sent = self.data_processor.transform_to_one_hot([sent], len(self.data_processor.get_word2idx_dict()))[0]
+
+        pos_predictions = self.pos_model.predict(np.array([onehot_sent]))[0]
+        tags = np.argmax(pos_predictions, axis=1)
+
+        return [self.data_processor.get_idx2tag_dict()[idx] for idx in tags][:sent_len]
+
+    def predict_all(self, raw_sent):
+        sent = raw_sent.split(' ')
+        sent_len = len(sent)
+        sent = self.data_processor.preprocess_sentence(sent)
+
+        preds = self.model.predict(np.array([sent]))
+        return preds
