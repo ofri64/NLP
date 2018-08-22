@@ -106,14 +106,18 @@ class SimpleTagger(POSTaggerInterface):
         if not name:
             name = self.name
 
-        if not os.path.exists(modelpath(name)):
-            os.mkdir(modelpath(name))
+        models_dir_path = os.path.dirname(__file__) + '/../models/'
+        filename = name + ".h5"
+        filepath = os.path.join(models_dir_path,filename)
 
-        start_time = '{:%d-%m-%Y_%H:%M:%S}'.format(datetime.now())
-        os.mkdir(modelpath(name + '/' + start_time))
-        filepath = modelpath('%s/%s/model.{epoch:02d}.hdf5' % (name, start_time))
+        # if not os.path.exists(modelpath(name)):
+        #     os.mkdir(modelpath(name))
+        #
+        # start_time = '{:%d-%m-%Y_%H:%M:%S}'.format(datetime.now())
+        # os.mkdir(modelpath(name + '/' + start_time))
+        # filepath = modelpath('%s/%s/model.{epoch:02d}.hdf5' % (name, start_time))
 
-        checkpoint = ModelCheckpoint(filepath, save_weights_only=False)
+        checkpoint = ModelCheckpoint(filepath, monitor="loss", verbose=1, save_best_only=True, mode="min")
         callbacks = [checkpoint] if callbacks is None else callbacks + [checkpoint]
 
         # Fit model and concatenate callbacks
