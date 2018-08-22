@@ -87,7 +87,7 @@ def run_experiment(processor, tagger, train_path, test_path, load_processor_from
         if load_tagger_from:
             tagger.load_model_params(load_tagger_from)
         else:
-            tagger.fit(x_train, [y_train] + y_train_features, callbacks=[cb])
+            tagger.fit(x_train, [y_train] + y_train_features, callbacks=[cb], name=name)
 
         # Evaluate results
         cb.send_update('Evaluation has just started.')
@@ -134,15 +134,15 @@ def main(language, feature, n_epochs, times, remote, features, remote_stop, _all
 
     if _all:
         experiment_name = '{0}_all'.format(language)
-        processor = DataProcessor(name=experiment_name)
+        processor = DataProcessor(name=language)
         tagger = MTLAllFeaturesTagger(processor, n_epochs=n_epochs, hidden_size=hidden_size)
     elif feature:
         experiment_name = '{0}_{1}'.format(language, feature)
-        processor = DataProcessor(name=experiment_name)
+        processor = DataProcessor(name=language)
         tagger = MTLOneFeatureTagger(processor, n_epochs=n_epochs, feature=feature, hidden_size=hidden_size)
     else:
         experiment_name = language
-        processor = DataProcessor(name=experiment_name)
+        processor = DataProcessor(name=language)
         tagger = SimpleTagger(processor, n_epochs=n_epochs, hidden_size=hidden_size)
 
     if times == 1:
