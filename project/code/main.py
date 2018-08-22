@@ -203,9 +203,7 @@ def main(language, feature, n_epochs, times, remote, features, remote_stop, _all
         print(eval_name)
         acc, unseen_acc = evaluate(processor, tagger, test_path, feature, _all)
 
-
         log_experiment(eval_name, acc, unseen_acc)
-
         return
 
     for i in range(times):

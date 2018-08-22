@@ -130,7 +130,7 @@ class DataProcessor(object):
                 return cat
 
         # if none of the conditions supplied - return generic "UNK" symbol
-        return "UNK"
+        return UNK
 
     def compute_percentile_sequence_length(self, file_path, percentile):
         sentences = self.read_file(file_path)
@@ -187,7 +187,7 @@ class DataProcessor(object):
                         features_dict[k] = set()
                     features_dict[k].add(v)
 
-        tags = list(tags) + [PADD]
+        tags = list(tags) + [PADD, UNK]
         features_dict = {k.lower(): list(v) + [NO_VALUE, PADD, UNK] for k, v in features_dict.items()}
 
         # Initiate word-to-index and tag-to-index and features-to-index dictionaries
@@ -247,7 +247,7 @@ class DataProcessor(object):
         # build sample and labels by replacing words and tags with matching idx
         # Words never seen before will be replaced by the index of their category
         x = [[self.word2idx.get(w, self.word2idx[self._replace_rare_word(w)]) for w, _, _ in sent] for sent in sents]
-        y = [[self.tag2idx[t] for _, t, _ in sent] for sent in sents]
+        y = [[self.tag2idx.get(t, self.tag2idx[UNK]) for _, t, _ in sent] for sent in sents]
         # y_features = {k: [[feature2idx[f] for _, _, f in sent] for sent in sents] for k, feature2idx in
         #               self.features2idx.items()}
 
