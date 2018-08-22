@@ -138,8 +138,13 @@ class DataProcessor(object):
 
                     word, pos_tag, raw_features = tokens[1], tokens[3], tokens[5]
                     features = {}
+
+                    def fn(k):
+                        # AKA featurename
+                        return k.lower().replace('[', '').replace(']', '')
+
                     if raw_features != '_':
-                        features = {k.lower(): v for k, v in [rf.split('=') for rf in raw_features.split('|')]}
+                        features = {fn(k): v for k, v in [rf.split('=') for rf in raw_features.split('|')]}
 
                     curr.append((word, pos_tag, features))
 
