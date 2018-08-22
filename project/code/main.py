@@ -12,6 +12,7 @@ LOG_FILE = '../logs/experiments.log'
 
 cb = None
 
+
 def datasets_paths(language):
     language_train_path = os.path.join(os.path.dirname(__file__), os.pardir, 'datasets', language, 'train.conllu')
     language_test_path = os.path.join(os.path.dirname(__file__), os.pardir, 'datasets', language, 'test.conllu')
@@ -28,12 +29,17 @@ def model_path(subpath):
     return os.path.abspath(path)
 
 
-def log_experiment(experiment_name, acc, unseen_acc):
-    print('\nacc:\t\t\t{0}\nunseen acc:\t\t{1}'.format(acc, unseen_acc))
+def log_experiment(experiment_name, acc, unseen_acc, ambig_acc, hidden_size, embedding_size):
+    print('\nacc:\t\t\t{0}\nunseen acc:\t\t{1}\nambiguous acc:\t\t{2}'.format(acc, unseen_acc, ambig_acc))
     with open(LOG_FILE, "a+") as logfile:
         logfile.write('-----------\n')
-        logfile.write('Experiment:\t\t\t{0}\nAccuracy:\t\t\t{1}\nUnseen Accuracy:\t{2}\n'
-                      .format(experiment_name, acc, unseen_acc))
+        logfile.write('Experiment:\t\t\t{0}\n'
+                      'Accuracy:\t\t\t{1}\n'
+                      'Unseen Accuracy:\t{2}\n'
+                      'Ambiguous Accuracy:\t{3}\n'
+                      'Hidden Size:\t\t{4}\n'
+                      'Embedding Size:\t\t{5}\n'
+                      .format(experiment_name, acc, unseen_acc, ambig_acc, hidden_size, embedding_size))
         logfile.write('-----------\n\n')
 
 
@@ -114,7 +120,11 @@ def run_experiment(processor, tagger, train_path, test_path, load_processor=None
         unseen_acc = tagger.evaluate_sample_conditioned(x_test, [y_test] + y_test_features, 'unseen')
         cb.send_update('*Unseen Evaluation has ended!* Accuracy: `{0}`'.format(unseen_acc))
 
-        return acc, unseen_acc
+        # Evaluate ambiguous results
+        ambig_acc = tagger.evaluate_sample_conditioned(x_test, [y_test] + y_test_features, 'ambiguous')
+        cb.send_update('*Ambiguous Evaluation has ended!* Accuracy: `{0}`'.format(ambig_acc))
+
+        return acc, unseen_acc, ambig_acc
 
     except Exception as e:
         cb.send_update(repr(e))
@@ -185,7 +195,7 @@ def main(language, feature, n_epochs, times, remote, features, remote_stop, _all
         experiment_name = language
         tagger = SimpleTagger(processor, n_epochs=n_epochs, hidden_size=hidden_size, embed_size=embedding_size)
 
-    all_acc, all_unseen_acc = 0, 0
+    all_acc, all_unseen_acc, all_ambig_acc = 0, 0, 0
 
     if to_evaluate:
         cb = CloudCallback(remote=remote, slack_url=slack_url)
@@ -203,23 +213,26 @@ def main(language, feature, n_epochs, times, remote, features, remote_stop, _all
         print(eval_name)
         acc, unseen_acc = evaluate(processor, tagger, test_path, feature, _all)
 
-        log_experiment(eval_name, acc, unseen_acc)
+        log_experiment(eval_name, acc, unseen_acc, 0, 0, 0)
         return
 
     for i in range(times):
         # experiment_i_name = experiment_name + '_' + str(i + 1)
 
         features = [feature] if feature else None
-        acc, unseen_acc = run_experiment(processor, tagger, train_path, test_path, features=features,
-                                         name=experiment_name, remote=remote, remote_stop=remote_stop,
-                                         _all=_all, load_processor=load_processor, load_tagger=load_tagger)
+        acc, unseen_acc, ambig_acc = run_experiment(processor, tagger, train_path, test_path, features=features,
+                                                    name=experiment_name, remote=remote, remote_stop=remote_stop,
+                                                    _all=_all, load_processor=load_processor, load_tagger=load_tagger)
 
         all_acc += acc
         all_unseen_acc += unseen_acc
+        all_ambig_acc += ambig_acc
 
+    # Average over all accuracies and log
     avg_acc = np.divide(all_acc, times)
-    avg__unseen_acc = np.divide(all_unseen_acc, times)
-    log_experiment(experiment_name, avg_acc, avg__unseen_acc)
+    avg_unseen_acc = np.divide(all_unseen_acc, times)
+    avg_ambig_acc = np.divide(all_ambig_acc, times)
+    log_experiment(experiment_name, avg_acc, avg_unseen_acc, avg_ambig_acc, hidden_size, embedding_size)
 
 
 if __name__ == "__main__":

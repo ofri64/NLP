@@ -130,38 +130,38 @@ class SimpleTagger(POSTaggerInterface):
         boolean_unseen_matrix = np.zeros([x_test.shape[0], x_test.shape[1]])
 
         if condition == 'unseen':
-            num_sent = 0
-            for i, sent in enumerate(x_test_indices):
-                appended = False
-                for j, word in enumerate(sent):
-                    if word in self.data_processor.unk_indices:
-                        boolean_unseen_matrix[num_sent, j] = 1
-                        # print('UNKNOWN WORD:', word, i)
-                        if not appended:
-                            x_unseen_test.append(sent)
-                            y_unseen_test.append(y_test[i])
-                            num_sent += 1
-                            appended = True
-
-            # delete unnecessary rows
-            boolean_unseen_matrix = np.delete(boolean_unseen_matrix, [_ for _ in range(num_sent, x_test.shape[0])],
-                                              axis=0)
-
-            x_unseen_test = np.array(self.data_processor.transform_to_one_hot(x_unseen_test, x_test.shape[2]))
-            y_unseen_test = self.data_processor.transform_to_index(y_unseen_test)
-
-            # print('Evaluating ', len(x_unseen_test))
-
-            predictions = self.predict(x_unseen_test)
-            acc_matrix = predictions == y_unseen_test
-            acc = np.divide(np.sum(acc_matrix * boolean_unseen_matrix), np.sum(boolean_unseen_matrix))
-
-            return acc
-
-        # TODO: Ambiguous case
-
+            condition_indices = self.data_processor.unk_indices
+        elif condition == 'ambiguous':
+            condition_indices = self.data_processor.ambig_indices
         else:
             raise AttributeError("Condition must be one of: {'unseen', 'ambiguous'}")
+
+        num_sent = 0
+        for i, sent in enumerate(x_test_indices):
+            appended = False
+            for j, word in enumerate(sent):
+                if word in condition_indices:
+                    boolean_unseen_matrix[num_sent, j] = 1
+                    if not appended:
+                        x_unseen_test.append(sent)
+                        y_unseen_test.append(y_test[i])
+                        num_sent += 1
+                        appended = True
+
+        # delete unnecessary rows
+        boolean_unseen_matrix = np.delete(boolean_unseen_matrix, [_ for _ in range(num_sent, x_test.shape[0])],
+                                          axis=0)
+
+        x_unseen_test = np.array(self.data_processor.transform_to_one_hot(x_unseen_test, x_test.shape[2]))
+        y_unseen_test = self.data_processor.transform_to_index(y_unseen_test)
+
+        print('Evaluating: {0}'.format(len(x_unseen_test)))
+
+        predictions = self.predict(x_unseen_test)
+        acc_matrix = predictions == y_unseen_test
+        acc = np.divide(np.sum(acc_matrix * boolean_unseen_matrix), np.sum(boolean_unseen_matrix))
+
+        return acc
 
     def predict(self, sentences):
         predictions = self.model.predict(sentences)

@@ -50,6 +50,7 @@ class DataProcessor(object):
         self.unk_indices = []
         self.GLOBAL_CATEGORIES = OrderedDict({}) if not replace_global else GLOBAL_CATEGORIES
         self.name = name
+        self.ambig_indices = set()
 
     @staticmethod
     def transform_to_one_hot(sample, mapping_dict_length):
@@ -178,10 +179,22 @@ class DataProcessor(object):
     def process(self, dataset_path):
         sents = self.read_file(dataset_path)
         words, tags, features_dict = OrderedDict([]), set(), {}
+        word_pos_dict = {}
+
         for sent in sents:
             for w, t, features in sent:
+                # Add words and tags to create index-based vectors
                 words[w] = words.get(w, 0) + 1
                 tags.add(t)
+
+                # Add the word to dict. if ambiguous, add to ambig set
+                if not word_pos_dict.get(w):
+                    word_pos_dict[w] = t
+                else:
+                    if t != word_pos_dict[w]:
+                        self.ambig_indices.add(w)
+
+                # Process word features
                 for k, v in features.items():
                     if k not in features_dict:
                         features_dict[k] = set()
@@ -194,6 +207,9 @@ class DataProcessor(object):
         self._init_word2idx_dict(words)
         self.tag2idx = {tag: idx for idx, tag in enumerate(tags)}
         self.features2idx = {k: {v: idx for idx, v in enumerate(feat)} for k, feat in features_dict.items()}
+
+        # Update ambig words with one hots represntation
+        self.ambig_indices = [self.word2idx[w] for w in self.ambig_indices]
 
     def load(self, file_path=None):
         if not file_path:
