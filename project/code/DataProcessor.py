@@ -7,6 +7,7 @@ import os
 
 NO_VALUE = 'NO_VALUE'
 PADD = 'PADD'
+UNK = 'UNK'
 
 
 def pickle_path(name):
@@ -163,7 +164,7 @@ class DataProcessor(object):
                     features_dict[k].add(v)
 
         tags = list(tags) + [PADD]
-        features_dict = {k.lower(): list(v) + [NO_VALUE, PADD] for k, v in features_dict.items()}
+        features_dict = {k.lower(): list(v) + [NO_VALUE, PADD, UNK] for k, v in features_dict.items()}
 
         # Initiate word-to-index and tag-to-index and features-to-index dictionaries
         self._init_word2idx_dict(words)
@@ -247,7 +248,8 @@ class DataProcessor(object):
         # y_features = {k: [[feature2idx[f] for _, _, f in sent] for sent in sents] for k, feature2idx in
         #               self.features2idx.items()}
 
-        y_features = {k.lower(): [[feature2idx[f.get(k.lower(), NO_VALUE)] for _, _, f in sent] for sent in sents] for
+        # TODO: notice! UNK fallback added!
+        y_features = {k.lower(): [[feature2idx.get(f.get(k.lower(), NO_VALUE), feature2idx[UNK]) for _, _, f in sent] for sent in sents] for
                       k, feature2idx in self.features2idx.items()}
 
         # perform padding to structure every sentence example to a defined size
