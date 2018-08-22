@@ -42,12 +42,6 @@ def build_model(input_layer, bilstm, hidden_size, n_pos, *outputs_list, **output
     return Model(inputs=input_layer, outputs=outputs)
 
 
-# EXAMPLE (1 feature - binyan):
-# input_layer, bilstm = base_network(input_length, vocab_size, embed_size, padding_index)
-# self.model = build_model(input_layer, bilstm, hidden_size, n_pos, binyan=n_binyans})
-# self.build_and_compile()
-
-
 class SimpleTagger(POSTaggerInterface):
 
     def __init__(self, data_processor, embed_size=50, hidden_size=100, batch_size=32, n_epochs=10,
@@ -271,6 +265,10 @@ class MTLAllFeaturesTagger(SimpleTagger):
         self.pos_model = Model(inputs=sent_input, outputs=pos_output)
 
         print(self.model.summary())
+
+    def load_model_params(self, file_path):
+        self.model = load_model(file_path)
+        self.pos_model = Model(inputs=self.model.input, outputs=self.model.output[0])  # output[0] is pos...
 
     def predict(self, sentences):
         pos_predictions = self.pos_model.predict(sentences)

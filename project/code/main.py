@@ -44,16 +44,16 @@ def run_experiment(processor, tagger, train_path, test_path, load_processor_from
             features = [features]
         elif not features:
             features = []
-
     try:
         # Initiate processor
         if load_processor_from:
             processor.load(load_processor_from)
         else:
             processor.process(train_path)
-            if _all:
-                features = processor.get_features()
             processor.save()
+
+        if _all:
+            features = processor.get_features()
 
         word_dict = processor.get_word2idx_dict()
         tag_dict = processor.get_tag2idx_dict()
