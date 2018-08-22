@@ -150,7 +150,7 @@ class SimpleTagger(POSTaggerInterface):
             x_unseen_test = np.array(self.data_processor.transform_to_one_hot(x_unseen_test, x_test.shape[2]))
             y_unseen_test = self.data_processor.transform_to_index(y_unseen_test)
 
-            print('Evaluating ', len(x_unseen_test))
+            # print('Evaluating ', len(x_unseen_test))
 
             predictions = self.predict(x_unseen_test)
             acc_matrix = predictions == y_unseen_test
@@ -170,7 +170,7 @@ class SimpleTagger(POSTaggerInterface):
     def load_model_params(self, file_path):
         self.model = load_model(file_path)
 
-    def predict_pos(self, raw_sent):
+    def predict_pos_raw_sent(self, raw_sent):
         sent = raw_sent.split(' ')
         sent_len = len(sent)
         sent = self.data_processor.preprocess_sentence(sent)
