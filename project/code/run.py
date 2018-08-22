@@ -5,10 +5,10 @@ from config import *
 
 
 def main(language, feature, n_epochs, times, remote, features, remote_update, remote_stop,
-         _all, hidden_size, load_processor_from, load_tagger_from):
+         _all, embedding_size, hidden_size, load_processor_from, load_tagger_from):
     if not remote:
         import main as _main_
-        return _main_.main(language, feature, n_epochs, times, remote, features, False, _all, hidden_size, load_processor_from, load_tagger_from)
+        return _main_.main(language, feature, n_epochs, times, remote, features, False, _all, embedding_size, hidden_size, load_processor_from, load_tagger_from)
 
     call('gcloud compute instances start --zone={zone} {vm}'.format(zone=gcloud_zone, vm=gcloud_vm), shell=True)
 
@@ -51,12 +51,13 @@ if __name__ == '__main__':
     parser.add_argument('-u', '--update', help='update the remote code', action='store_true')
     parser.add_argument('-s', '--stop', help='stop the instance upon finish', action='store_true')
     parser.add_argument('-a', '--all', help='to run with all available features', action='store_true')
-    parser.add_argument('-hs', '--hidden_size', help='number of epochs to run', type=int, default=100)
+    parser.add_argument('-em', '--embedding_size', help='size of embedding layer', type=int, default=50)
+    parser.add_argument('-hs', '--hidden_size', help='size of hidden layer in LSTM layers', type=int, default=100)
     parser.add_argument('-x', '--times', help='number of experiments to run', type=int, default=1)
-    parser.add_argument('-lp', '--load_processor_from', help="path to load trained processor", default=None)
-    parser.add_argument('-lm', '--load_model_from', help="path to load a trained tagger model", default=None)
+    parser.add_argument('-lp', '--load_processor', help="load train processor flag", action='store_true')
+    parser.add_argument('-lm', '--load_model', help="load a trained tagger model flag", action='store_true')
 
     args = parser.parse_args()
 
     main(args.language, args.feature, args.n_epochs, args.times, args.remote, args.features, args.update, args.stop,
-         args.all, args.hidden_size, args.load_processor_from, args.load_model_from)
+         args.all, args.embedding_size, args.hidden_size, args.load_processor, args.load_model)

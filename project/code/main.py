@@ -35,8 +35,8 @@ def log_experiment(experiment_name, acc, unseen_acc):
         logfile.write('-----------\n\n')
 
 
-def run_experiment(processor, tagger, train_path, test_path, load_processor_from=None, load_tagger_from=None,
-                   features=None, name='experiment', remote=False, remote_stop=False, _all=False):
+def run_experiment(processor, tagger, train_path, test_path, load_processor=None, load_tagger=None,
+                   features=None, name=None, remote=False, remote_stop=False, _all=False):
     cb = CloudCallback(remote=remote, slack_url=slack_url, stop_url=stop_url if remote_stop else '')
 
     if not _all:
@@ -46,9 +46,12 @@ def run_experiment(processor, tagger, train_path, test_path, load_processor_from
             features = []
     try:
         # Initiate processor
-        if load_processor_from:
-            processor.load(load_processor_from)
-        else:
+        load_processor_path = pickle_path(name)
+
+        if load_processor:  # load a trained processor from file
+            processor.load(load_processor_path)
+
+        else:  # train a processor using the training data
             processor.process(train_path)
             processor.save()
 
@@ -61,16 +64,24 @@ def run_experiment(processor, tagger, train_path, test_path, load_processor_from
         feature_dicts = {k: v for k, v in processor.get_features2idx_dicts().items() if k in features}
         feature_dicts = feature_dicts.values()
 
-        # Process training set
-        x_train, y_train, y_train_features = processor.preprocess_sample(train_path)
+        if load_tagger:
+            load_tagger_path = model_path(name + ".h5")
+            tagger.load_model_params(load_tagger_path)
 
-        y_train_features = {k: v for k, v in y_train_features.items() if k in features}
-        y_train_features = y_train_features.values()
+        else:  # need to preprocess training data and train model
 
-        x_train = processor.transform_to_one_hot(x_train, len(word_dict))
-        y_train = processor.transform_to_one_hot(y_train, len(tag_dict))
-        y_train_features = [processor.transform_to_one_hot(y_train_feature, len(feature_dict)) for
-                            y_train_feature, feature_dict in zip(y_train_features, feature_dicts)]
+            # Process training set
+            x_train, y_train, y_train_features = processor.preprocess_sample(train_path)
+
+            y_train_features = {k: v for k, v in y_train_features.items() if k in features}
+            y_train_features = y_train_features.values()
+
+            x_train = processor.transform_to_one_hot(x_train, len(word_dict))
+            y_train = processor.transform_to_one_hot(y_train, len(tag_dict))
+            y_train_features = [processor.transform_to_one_hot(y_train_feature, len(feature_dict)) for
+                                y_train_feature, feature_dict in zip(y_train_features, feature_dicts)]
+
+            tagger.fit(x_train, [y_train] + y_train_features, callbacks=[cb], name=name)
 
         # Process test set
         x_test, y_test, y_test_features = processor.preprocess_sample(test_path)
@@ -82,12 +93,6 @@ def run_experiment(processor, tagger, train_path, test_path, load_processor_from
         y_test = processor.transform_to_one_hot(y_test, len(tag_dict))
         y_test_features = [processor.transform_to_one_hot(y_test_feature, len(feature_dict)) for
                            y_test_feature, feature_dict in zip(y_test_features, feature_dicts)]
-
-        # Fit model
-        if load_tagger_from:
-            tagger.load_model_params(load_tagger_from)
-        else:
-            tagger.fit(x_train, [y_train] + y_train_features, callbacks=[cb], name=name)
 
         # Evaluate results
         cb.send_update('Evaluation has just started.')
@@ -118,7 +123,8 @@ def run_experiment(processor, tagger, train_path, test_path, load_processor_from
         cb.stop_instance()
 
 
-def main(language, feature, n_epochs, times, remote, features, remote_stop, _all, hidden_size, load_processor_from, load_tagger_from):
+def main(language, feature, n_epochs, times, remote, features, remote_stop, _all, embedding_size, hidden_size,
+         load_processor, load_tagger):
     train_path, test_path = datasets_paths(language)
 
     if features:
@@ -135,26 +141,30 @@ def main(language, feature, n_epochs, times, remote, features, remote_stop, _all
     if _all:
         experiment_name = '{0}_all'.format(language)
         processor = DataProcessor(name=language)
-        tagger = MTLAllFeaturesTagger(processor, n_epochs=n_epochs, hidden_size=hidden_size)
+        tagger = MTLAllFeaturesTagger(processor, n_epochs=n_epochs, hidden_size=hidden_size, embed_size=embedding_size)
     elif feature:
         experiment_name = '{0}_{1}'.format(language, feature)
         processor = DataProcessor(name=language)
-        tagger = MTLOneFeatureTagger(processor, n_epochs=n_epochs, feature=feature, hidden_size=hidden_size)
+        tagger = MTLOneFeatureTagger(processor, n_epochs=n_epochs, feature=feature, hidden_size=hidden_size,
+                                     embed_size=embedding_size)
     else:
         experiment_name = language
         processor = DataProcessor(name=language)
-        tagger = SimpleTagger(processor, n_epochs=n_epochs, hidden_size=hidden_size)
+        tagger = SimpleTagger(processor, n_epochs=n_epochs, hidden_size=hidden_size, embed_size=embedding_size)
 
     if times == 1:
         if _all:
             acc, unseen_acc = run_experiment(processor, tagger, train_path, test_path,
-                                             name=experiment_name, remote=remote, remote_stop=remote_stop, _all=True, load_processor_from=load_processor_from, load_tagger_from=load_tagger_from)
+                                             name=experiment_name, remote=remote, remote_stop=remote_stop, _all=True,
+                                             load_processor=load_processor, load_tagger=load_tagger)
         elif feature:
             acc, unseen_acc = run_experiment(processor, tagger, train_path, test_path, features=[feature],
-                                             name=experiment_name, remote=remote, remote_stop=remote_stop, load_processor_from=load_processor_from, load_tagger_from=load_tagger_from)
+                                             name=experiment_name, remote=remote, remote_stop=remote_stop,
+                                             load_processor=load_processor, load_tagger=load_tagger)
         else:
             acc, unseen_acc = run_experiment(processor, tagger, train_path, test_path, name=experiment_name,
-                                             remote=remote, remote_stop=remote_stop, load_processor_from=load_processor_from, load_tagger_from=load_tagger_from)
+                                             remote=remote, remote_stop=remote_stop, load_processor=load_processor,
+                                             load_tagger=load_tagger)
         log_experiment(experiment_name, acc, unseen_acc)
     else:
         all_acc, all_unseen_acc = 0, 0
@@ -163,13 +173,15 @@ def main(language, feature, n_epochs, times, remote, features, remote_stop, _all
             if _all:
                 acc, unseen_acc = run_experiment(processor, tagger, train_path, test_path,
                                                  name=experiment_i_name, remote=remote, remote_stop=remote_stop,
-                                                 _all=True, load_processor_from=load_processor_from, load_tagger_from=load_tagger_from)
+                                                 _all=True, load_processor=load_processor, load_tagger=load_tagger)
             elif feature:
                 acc, unseen_acc = run_experiment(processor, tagger, train_path, test_path, features=[feature],
-                                                 name=experiment_i_name, remote=remote, remote_stop=remote_stop, load_processor_from=load_processor_from, load_tagger_from=load_tagger_from)
+                                                 name=experiment_i_name, remote=remote, remote_stop=remote_stop,
+                                                 load_processor=load_processor, load_tagger=load_tagger)
             else:
                 acc, unseen_acc = run_experiment(processor, tagger, train_path, test_path,
-                                                 name=experiment_i_name, remote=remote, remote_stop=remote_stop, load_processor_from=load_processor_from, load_tagger_from=load_tagger_from)
+                                                 name=experiment_i_name, remote=remote, remote_stop=remote_stop,
+                                                 load_processor=load_processor, load_tagger=load_tagger)
 
             all_acc += acc
             all_unseen_acc += unseen_acc
@@ -189,11 +201,12 @@ if __name__ == "__main__":
     parser.add_argument('-fs', '--features', help='get all features of the given language', action='store_true')
     parser.add_argument('-s', '--stop', help='stop the instance upon finish', action='store_true')
     parser.add_argument('-a', '--all', help='', action='store_true')
+    parser.add_argument('-em', '--embedding_size', help='size of embedding layer', type=int, default=50)
     parser.add_argument('-hs', '--hidden_size', help='number of epochs to run', type=int, default=100)
-    parser.add_argument('-lp', '--load_processor_from', help="path to load trained processor", default=None)
-    parser.add_argument('-lm', '--load_model_from', help="path to load a trained tagger model", default=None)
+    parser.add_argument('-lp', '--load_processor', help="load train processor flag", action='store_true')
+    parser.add_argument('-lm', '--load_model', help="load a trained tagger model flag", action='store_true')
 
     args = parser.parse_args()
 
     main(args.language, args.feature, args.n_epochs, args.times, args.remote, args.features, args.stop, args.all,
-         args.hidden_size,args.load_processor_from, args.load_model_from)
+         args.embedding_size, args.hidden_size, args.load_processor_from, args.load_model_from)
