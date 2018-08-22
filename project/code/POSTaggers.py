@@ -172,6 +172,18 @@ class SimpleTagger(POSTaggerInterface):
     def load_model_params(self, file_path):
         self.model = load_model(file_path)
 
+    def predict_pos(self, raw_sent):
+        sent = raw_sent.split(' ')
+        sent_len = len(sent)
+        sent = self.data_processor.preprocess_sentence(sent)
+
+        onehot_sent = self.data_processor.transform_to_one_hot([sent], len(self.data_processor.get_word2idx_dict()))[0]
+
+        pos_predictions = self.model.predict(np.array([onehot_sent]))[0]
+        tags = np.argmax(pos_predictions, axis=1)
+
+        return [self.data_processor.get_idx2tag_dict()[idx] for idx in tags][:sent_len]
+
 
 class MTLOneFeatureTagger(SimpleTagger):
     def __init__(self, data_processor, feature, embed_size=50, hidden_size=100, batch_size=32,
@@ -237,8 +249,9 @@ class MTLAllFeaturesTagger(SimpleTagger):
         embedding = Dense(units=self.embed_size)(sent_input)
         masking = Masking(mask_value=padding_index)(embedding)
         dropout = Dropout(self.dropout_rate)(masking)
-        # hidden1 = Bidirectional(LSTM(units=self.hidden_size, return_sequences=True))(dropout)
-        hidden1 = Dense(units=self.hidden_size, activation='relu')(dropout)
+
+        hidden1 = Bidirectional(LSTM(units=self.hidden_size, return_sequences=True))(dropout)
+        # hidden1 = Dense(units=self.hidden_size, activation='relu')(dropout)
 
         features_outputs = {f: Dense(units=n_labels, activation='softmax', name=f)(hidden1) for f, n_labels in
                             n_features_labels.items()}
@@ -267,6 +280,18 @@ class MTLAllFeaturesTagger(SimpleTagger):
         onehot_sent = self.data_processor.transform_to_one_hot([sent], len(self.data_processor.get_word2idx_dict()))[0]
 
         pos_predictions = self.pos_model.predict(np.array([onehot_sent]))[0]
+        tags = np.argmax(pos_predictions, axis=1)
+
+        return [self.data_processor.get_idx2tag_dict()[idx] for idx in tags][:sent_len]
+
+    def predict_pos_with_regular_model(self, raw_sent):
+        sent = raw_sent.split(' ')
+        sent_len = len(sent)
+        sent = self.data_processor.preprocess_sentence(sent)
+
+        onehot_sent = self.data_processor.transform_to_one_hot([sent], len(self.data_processor.get_word2idx_dict()))[0]
+
+        pos_predictions = self.model.predict(np.array([onehot_sent]))[0][0]
         tags = np.argmax(pos_predictions, axis=1)
 
         return [self.data_processor.get_idx2tag_dict()[idx] for idx in tags][:sent_len]

@@ -15,7 +15,6 @@ def pickle_path(name):
 
 
 class DataProcessor(object):
-
     def __init__(self, max_seq_len=40, rare_word_threshold=1, name='my_cool_processor'):
         self.word2idx = None
         self.tag2idx = None
@@ -120,7 +119,6 @@ class DataProcessor(object):
         """
             Takes a path to a file and returns a list of word/tag pairs
         """
-
         sents = []
         with open(path, encoding='utf-8', mode='r') as f:
             curr = []
@@ -141,7 +139,7 @@ class DataProcessor(object):
                     word, pos_tag, raw_features = tokens[1], tokens[3], tokens[5]
                     features = {}
                     if raw_features != '_':
-                        features = {k: v for k, v in [rf.split('=') for rf in raw_features.split('|')]}
+                        features = {k.lower(): v for k, v in [rf.split('=') for rf in raw_features.split('|')]}
 
                     curr.append((word, pos_tag, features))
 
@@ -171,7 +169,7 @@ class DataProcessor(object):
         if not file_path:
             file_path = pickle_path(self.name)
 
-        with open(file_path, "rb") as handle:
+        with open(file_path, 'rb') as handle:
             tmp_dict = pickle.load(handle)
             self.__dict__.update(tmp_dict)
 
@@ -182,6 +180,27 @@ class DataProcessor(object):
         with open(file_path, "wb") as handle:
             # attributes = [self.word2idx, self.tag2idx]
             pickle.dump(self.__dict__, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+    # def load(self):
+    #     file_path = pickle_path(self.name)
+    #
+    #     with open(file_path, 'rb') as handle:
+    #         data = pickle.load(handle)
+    #         self.word2idx = data['word2idx']
+    #         self.tag2idx = data['tag2idx']
+    #         self.idx2tag = data['idx2tag']
+    #         self.features2idx = data['features2idx']
+    #
+    #     return self
+    #
+    # def save(self):
+    #     file_path = pickle_path(self.name)
+    #     with open(file_path, "wb") as handle:
+    #         data = {'word2idx': self.word2idx,
+    #                 'tag2idx': self.tag2idx,
+    #                 'idx2tag': self.idx2tag,
+    #                 'features2idx': self.features2idx}
+    #         pickle.dump(data, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
     def get_word2idx_dict(self):
         return self.word2idx
@@ -209,13 +228,6 @@ class DataProcessor(object):
     def get_name(self):
         return self.name
 
-    # def preprocess_sample(self, file_path):
-    #     """
-    #     Processes a sample set from a given file path
-    #     Returns a tuple of np.ndarrays for data set features (word idx) and data set labels
-    #     """
-    #     raise NotImplementedError("Preprocess sample method is not implemented yet")
-
     def preprocess_sample(self, sample_path):
         if self.word2idx is None or self.tag2idx is None or self.features2idx is None:
             raise AssertionError(
@@ -230,7 +242,8 @@ class DataProcessor(object):
         # y_features = {k: [[feature2idx[f] for _, _, f in sent] for sent in sents] for k, feature2idx in
         #               self.features2idx.items()}
 
-        y_features = {k: [[feature2idx[f.get(k, NO_VALUE)] for _, _, f in sent] for sent in sents] for k, feature2idx in self.features2idx.items()}
+        y_features = {k.lower(): [[feature2idx[f.get(k.lower(), NO_VALUE)] for _, _, f in sent] for sent in sents] for
+                      k, feature2idx in self.features2idx.items()}
 
         # perform padding to structure every sentence example to a defined size
         # use "PADD" symbol as padding value
@@ -245,6 +258,7 @@ class DataProcessor(object):
 
         return x, y, y_features
 
+    # used in order to predict sample.
     def preprocess_sentence(self, sent):
         if type(sent) is str:
             sent = sent.split(' ')
