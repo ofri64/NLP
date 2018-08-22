@@ -30,7 +30,7 @@ def model_path(subpath):
 
 
 def log_experiment(experiment_name, acc, unseen_acc, ambig_acc, hidden_size, embedding_size):
-    print('\nacc:\t\t\t{0}\nunseen acc:\t\t{1}\nambiguous acc:\t\t{2}'.format(acc, unseen_acc, ambig_acc))
+    print('\nacc:\t\t\t{0}\nunseen acc:\t\t{1}\nambiguous acc:\t{2}'.format(acc, unseen_acc, ambig_acc))
     with open(LOG_FILE, "a+") as logfile:
         logfile.write('-----------\n')
         logfile.write('Experiment:\t\t\t{0}\n'
