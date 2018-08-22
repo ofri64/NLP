@@ -206,7 +206,7 @@ class MTLOneFeatureTagger(SimpleTagger):
         embedding = Dense(units=self.embed_size)(sent_input)
         masking = Masking(mask_value=padding_index)(embedding)
         dropout = Dropout(self.dropout_rate)(masking)
-        hidden1 = Bidirectional(LSTM(units=10, return_sequences=True))(dropout)
+        hidden1 = Bidirectional(LSTM(units=self.hidden_size, return_sequences=True))(dropout)
 
         feature_output = Dense(units=n_feature_values, activation='softmax', name=self.feature)(hidden1)
 
