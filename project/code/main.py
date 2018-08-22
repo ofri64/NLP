@@ -118,7 +118,7 @@ def run_experiment(processor, tagger, train_path, test_path, load_processor_from
         cb.stop_instance()
 
 
-def main(language, feature, n_epochs, times, remote, features, remote_stop, _all, hidden_size):
+def main(language, feature, n_epochs, times, remote, features, remote_stop, _all, hidden_size, load_processor_from, load_tagger_from):
     train_path, test_path = datasets_paths(language)
 
     if features:
@@ -148,13 +148,13 @@ def main(language, feature, n_epochs, times, remote, features, remote_stop, _all
     if times == 1:
         if _all:
             acc, unseen_acc = run_experiment(processor, tagger, train_path, test_path,
-                                             name=experiment_name, remote=remote, remote_stop=remote_stop, _all=True)
+                                             name=experiment_name, remote=remote, remote_stop=remote_stop, _all=True, load_processor_from=load_processor_from, load_tagger_from=load_tagger_from)
         elif feature:
             acc, unseen_acc = run_experiment(processor, tagger, train_path, test_path, features=[feature],
-                                             name=experiment_name, remote=remote, remote_stop=remote_stop)
+                                             name=experiment_name, remote=remote, remote_stop=remote_stop, load_processor_from=load_processor_from, load_tagger_from=load_tagger_from)
         else:
             acc, unseen_acc = run_experiment(processor, tagger, train_path, test_path, name=experiment_name,
-                                             remote=remote, remote_stop=remote_stop)
+                                             remote=remote, remote_stop=remote_stop, load_processor_from=load_processor_from, load_tagger_from=load_tagger_from)
         log_experiment(experiment_name, acc, unseen_acc)
     else:
         all_acc, all_unseen_acc = 0, 0
@@ -163,13 +163,13 @@ def main(language, feature, n_epochs, times, remote, features, remote_stop, _all
             if _all:
                 acc, unseen_acc = run_experiment(processor, tagger, train_path, test_path,
                                                  name=experiment_i_name, remote=remote, remote_stop=remote_stop,
-                                                 _all=True)
+                                                 _all=True, load_processor_from=load_processor_from, load_tagger_from=load_tagger_from)
             elif feature:
                 acc, unseen_acc = run_experiment(processor, tagger, train_path, test_path, features=[feature],
-                                                 name=experiment_i_name, remote=remote, remote_stop=remote_stop)
+                                                 name=experiment_i_name, remote=remote, remote_stop=remote_stop, load_processor_from=load_processor_from, load_tagger_from=load_tagger_from)
             else:
                 acc, unseen_acc = run_experiment(processor, tagger, train_path, test_path,
-                                                 name=experiment_i_name, remote=remote, remote_stop=remote_stop)
+                                                 name=experiment_i_name, remote=remote, remote_stop=remote_stop, load_processor_from=load_processor_from, load_tagger_from=load_tagger_from)
 
             all_acc += acc
             all_unseen_acc += unseen_acc
@@ -190,8 +190,10 @@ if __name__ == "__main__":
     parser.add_argument('-s', '--stop', help='stop the instance upon finish', action='store_true')
     parser.add_argument('-a', '--all', help='', action='store_true')
     parser.add_argument('-hs', '--hidden_size', help='number of epochs to run', type=int, default=100)
+    parser.add_argument('-lp', '--load_processor_from', help="path to load trained processor", default=None)
+    parser.add_argument('-lm', '--load_model_from', help="path to load a trained tagger model", default=None)
 
     args = parser.parse_args()
 
     main(args.language, args.feature, args.n_epochs, args.times, args.remote, args.features, args.stop, args.all,
-         args.hidden_size)
+         args.hidden_size,args.load_processor_from, args.load_model_from)
