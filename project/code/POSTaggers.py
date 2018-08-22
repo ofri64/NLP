@@ -4,6 +4,7 @@ from KerasCallbacks import CheckpointCallback
 from keras.callbacks import ModelCheckpoint
 from keras.models import Model, load_model
 from keras.layers import Dense, LSTM, Dropout, Bidirectional, Masking, Input
+from keras.utils import multi_gpu_model
 from datetime import datetime
 import numpy as np
 import os
@@ -86,6 +87,8 @@ class SimpleTagger(POSTaggerInterface):
 
         # Compile the model
         self.model = Model(inputs=input_tensor, outputs=output)
+        parallel_model = multi_gpu_model(self.model, gpus=4)
+        self.model = parallel_model
         self.model.compile(loss='categorical_crossentropy',
                            optimizer=optimizer,
                            metrics=metrics)
@@ -214,6 +217,8 @@ class MTLOneFeatureTagger(SimpleTagger):
         pos_output = Dense(units=n_classes, activation='softmax', name='pos')(hidden2)
 
         self.model = Model(inputs=sent_input, outputs=[pos_output, feature_output])
+        parallel_model = multi_gpu_model(self.model, gpus=4)
+        self.model = parallel_model
         self.model.compile(loss='categorical_crossentropy',
                            optimizer=optimizer,
                            metrics=metrics)
@@ -258,6 +263,8 @@ class MTLAllFeaturesTagger(SimpleTagger):
         pos_output = Dense(units=n_classes, activation='softmax', name='pos')(hidden2)
 
         self.model = Model(inputs=sent_input, outputs=[pos_output] + list(features_outputs.values()))
+        parallel_model = multi_gpu_model(self.model, gpus=4)
+        self.model = parallel_model
         self.model.compile(loss='categorical_crossentropy',
                            optimizer=optimizer,
                            metrics=metrics)
