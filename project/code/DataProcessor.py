@@ -1,13 +1,37 @@
-import numpy as np
-import pickle
 from collections import OrderedDict
 from keras.utils import to_categorical
 from keras.preprocessing.sequence import pad_sequences
+
 import os
+import re
+import numpy as np
+import pickle
 
 NO_VALUE = 'NO_VALUE'
 PADD = 'PADD'
 UNK = 'UNK'
+
+GLOBAL_CATEGORIES = OrderedDict({
+    'twoDigitNum': lambda w: len(w) == 2 and w.isdigit() and w[0] != '0',
+    'fourDigitNum': lambda w: len(w) == 4 and w.isdigit() and w[0] != '0',
+    'containsDigitAndAlpha': lambda w: bool(re.search('\d', w)) and bool(re.search('[a-zA-Z_]', w)),
+    'containsDigitAndDash': lambda w: contains_digit_and_char(w, '-'),
+    'containsDigitAndSlash': lambda w: contains_digit_and_char(w, '/'),
+    'containsDigitAndComma': lambda w: contains_digit_and_char(w, ','),
+    'containsDigitAndPeriod': lambda w: contains_digit_and_char(w, '.'),
+    'otherNum': lambda w: w.isdigit(),
+    'allCaps': lambda w: w.isupper(),
+    'capPeriod': lambda w: len(w) == 2 and w[1] == '.' and w[0].isupper(),
+    'initCap': lambda w: len(w) > 1 and w[0].isupper(),
+    'lowerCase': lambda w: w.islower(),
+    'punkMark': lambda w: w in (",", ".", ";", "?", "!", ":", ";", "-", '&'),
+    'containsNonAlphaNumeric': lambda w: bool(re.search('\W', w)),
+    'percent': lambda w: len(w) > 1 and w[0] == '%' and w[1:].isdigit()
+})
+
+
+def contains_digit_and_char(word, ch):
+    return bool(re.search('\d', word)) and ch in word
 
 
 def pickle_path(name):
@@ -16,7 +40,7 @@ def pickle_path(name):
 
 
 class DataProcessor(object):
-    def __init__(self, max_seq_len=40, rare_word_threshold=1, name='my_cool_processor'):
+    def __init__(self, max_seq_len=40, rare_word_threshold=1, replace_global=False, name='DataProcessor'):
         self.word2idx = None
         self.tag2idx = None
         self.features2idx = None
@@ -24,7 +48,7 @@ class DataProcessor(object):
         self.max_seq_len = max_seq_len
         self.rare_word_threshold = rare_word_threshold
         self.unk_indices = []
-        self.GLOBAL_CATEGORIES = OrderedDict({})
+        self.GLOBAL_CATEGORIES = OrderedDict({}) if not replace_global else GLOBAL_CATEGORIES
         self.name = name
 
     @staticmethod
@@ -80,7 +104,7 @@ class DataProcessor(object):
             words.append(category)
 
         # and also the UNK and PADD symbols
-        words.append("UNK")
+        words.append(UNK)
         words.append(PADD)
 
         # transform words to indices
@@ -186,27 +210,6 @@ class DataProcessor(object):
         with open(file_path, "wb") as handle:
             # attributes = [self.word2idx, self.tag2idx]
             pickle.dump(self.__dict__, handle, protocol=pickle.HIGHEST_PROTOCOL)
-
-    # def load(self):
-    #     file_path = pickle_path(self.name)
-    #
-    #     with open(file_path, 'rb') as handle:
-    #         data = pickle.load(handle)
-    #         self.word2idx = data['word2idx']
-    #         self.tag2idx = data['tag2idx']
-    #         self.idx2tag = data['idx2tag']
-    #         self.features2idx = data['features2idx']
-    #
-    #     return self
-    #
-    # def save(self):
-    #     file_path = pickle_path(self.name)
-    #     with open(file_path, "wb") as handle:
-    #         data = {'word2idx': self.word2idx,
-    #                 'tag2idx': self.tag2idx,
-    #                 'idx2tag': self.idx2tag,
-    #                 'features2idx': self.features2idx}
-    #         pickle.dump(data, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
     def get_word2idx_dict(self):
         return self.word2idx
