@@ -43,6 +43,60 @@ def log_experiment(experiment_name, acc, unseen_acc, ambig_acc, hidden_size, emb
         logfile.write('-----------\n\n')
 
 
+def log_results_experiment(processor, tagger, train_path, test_path, load_processor=None, load_tagger=None,
+                   features=None, name=None, remote=False, remote_stop=False, _all=False):
+    cb = CloudCallback(remote=remote, slack_url=slack_url, stop_url=stop_url if remote_stop else '')
+
+    if not _all:
+        if type(features) is str:
+            features = [features]
+        elif not features:
+            features = []
+    try:
+        # load processor
+        load_processor_path = pickle_path(name)
+        processor.load(load_processor_path)
+
+        if _all:
+            features = processor.get_features()
+
+        word_dict = processor.get_word2idx_dict()
+        tag_dict = processor.get_tag2idx_dict()
+
+        feature_dicts = {k: v for k, v in processor.get_features2idx_dicts().items() if k in features}
+        feature_dicts = feature_dicts.values()
+
+        idx2word_dict = {v: k for k, v in word_dict.items()}
+        idx2tag_dict = {v:k for k, v in tag_dict.items()}
+
+        # load tagger
+        load_tagger_path = model_path(name + ".h5")
+        tagger.load_model_params(load_tagger_path)
+
+        # Process test set
+        raw_sentences = processor.get_raw_sentences(test_path)
+        x_test, y_test, y_test_features = processor.preprocess_sample(test_path)
+
+        y_test_features = {k: v for k, v in y_test_features.items() if k in features}
+        y_test_features = y_test_features.values()
+
+        x_test = processor.transform_to_one_hot(x_test, len(word_dict))
+        y_test = processor.transform_to_one_hot(y_test, len(tag_dict))
+        y_test_features = [processor.transform_to_one_hot(y_test_feature, len(feature_dict)) for
+                           y_test_feature, feature_dict in zip(y_test_features, feature_dicts)]
+
+        tagger.output_detailed_results(raw_sentences, x_test, [y_test] + y_test_features, 'unseen', idx2word_dict, idx2tag_dict)
+        tagger.output_detailed_results(raw_sentences, x_test, [y_test] + y_test_features, 'ambiguous', idx2word_dict, idx2tag_dict)
+
+    except Exception as e:
+        cb.send_update(repr(e))
+
+        import traceback
+        traceback.print_exc()
+    finally:
+        cb.stop_instance()
+
+
 def run_experiment(processor, tagger, train_path, test_path, load_processor=None, load_tagger=None,
                    features=None, name=None, remote=False, remote_stop=False, _all=False):
     cb = CloudCallback(remote=remote, slack_url=slack_url, stop_url=stop_url if remote_stop else '')
@@ -168,7 +222,7 @@ def evaluate(processor, tagger, test_path, feature=None, _all=False):
 
 
 def main(language, feature, n_epochs, times, remote, features, remote_stop, _all, embedding_size, hidden_size,
-         load_processor, load_tagger, to_evaluate):
+         load_processor, load_tagger, to_evaluate, log_results):
     train_path, test_path = datasets_paths(language)
 
     if features:
@@ -181,6 +235,9 @@ def main(language, feature, n_epochs, times, remote, features, remote_stop, _all
         print(pd.DataFrame(available_features))
         print('\r\n')
         return
+
+    if log_results and not (load_processor and load_tagger):
+        raise ValueError("The log results flag is only available on trained models. Please use the -lp and -lm flags also")
 
     if _all:
         experiment_name = '{0}_all'.format(language)
@@ -217,6 +274,12 @@ def main(language, feature, n_epochs, times, remote, features, remote_stop, _all
         log_experiment(eval_name, acc, unseen_acc, 0, 0, 0)
         return
 
+    if log_results:
+        log_results_experiment(processor, tagger, train_path, test_path, features=features,
+                               name=experiment_name, remote=remote, remote_stop=remote_stop,
+                               _all=_all, load_processor=load_processor, load_tagger=load_tagger)
+        return
+
     for i in range(times):
         # experiment_i_name = experiment_name + '_' + str(i + 1)
 
@@ -251,8 +314,9 @@ if __name__ == "__main__":
     parser.add_argument('-lp', '--load_processor', help="load train processor flag", action='store_true')
     parser.add_argument('-lm', '--load_model', help="load a trained tagger model flag", action='store_true')
     parser.add_argument('-ev', '--evaluate', help="evaluate a pretrained model")
+    parser.add_argument('-lr', '--log_results', help="Output detailed results for unseen and ambiguous sentences",action="store_true")
 
     args = parser.parse_args()
 
     main(args.language, args.feature, args.n_epochs, args.times, args.remote, args.features, args.stop, args.all,
-         args.embedding_size, args.hidden_size, args.load_processor, args.load_model, args.evaluate)
+         args.embedding_size, args.hidden_size, args.load_processor, args.load_model, args.evaluate, args.log_results)

@@ -163,6 +163,87 @@ class SimpleTagger(POSTaggerInterface):
 
         return acc
 
+    def output_detailed_results(self, raw_sentences, x_test, y_test, condition, idx2word_dict, idx2tag_dict):
+        y_test = y_test[0]
+        x_unseen_test = []
+        y_unseen_test = []
+        raw_sentences_unseen = []
+        x_test_indices = self.data_processor.transform_to_index(x_test)
+        # boolean_unseen_matrix = np.zeros([x_test.shape[0], x_test.shape[1]])
+
+        if condition == 'unseen':
+            condition_indices = self.data_processor.unk_indices
+            save_path = os.path.join(os.path.dirname(__file__), os.pardir, 'logs', self.data_processor.get_name() + "_unseen_results.txt")
+        elif condition == 'ambiguous':
+            condition_indices = self.data_processor.ambig_indices
+            save_path = os.path.join(os.path.dirname(__file__), os.pardir, 'logs', self.data_processor.get_name() + "_ambiguous_results.txt")
+        else:
+            raise AttributeError("Condition must be one of: {'unseen', 'ambiguous'}")
+
+        num_sent = 0
+        for i, sent in enumerate(x_test_indices):
+            appended = False
+            for j, word in enumerate(sent):
+                if word in condition_indices:
+                    # boolean_unseen_matrix[num_sent, j] = 1
+                    if not appended:
+                        x_unseen_test.append(sent)
+                        y_unseen_test.append(y_test[i])
+                        raw_sentences_unseen.append(raw_sentences[i])
+                        num_sent += 1
+                        appended = True
+
+        # delete unnecessary rows
+        # boolean_unseen_matrix = np.delete(boolean_unseen_matrix, [_ for _ in range(num_sent, x_test.shape[0])], axis=0)
+
+        x_unseen_test_onehot = np.array(self.data_processor.transform_to_one_hot(x_unseen_test, x_test.shape[2]))
+        y_unseen_test = self.data_processor.transform_to_index(y_unseen_test)
+        predictions = self.predict(x_unseen_test_onehot)
+
+        with open(save_path, "w", encoding="utf8") as f:
+            print("Writing results to file {0}".format(save_path))
+            padd_symbol = "PADD"
+            unk_symbol = "UNK"
+            for i in range(len(x_unseen_test)):
+                raw_sent = raw_sentences_unseen[i]
+                sent_words = [idx2word_dict[x_unseen_test[i][j]] for j in range(len(x_unseen_test[i]))]
+                ambig_indication = [x_unseen_test[i][j] in condition_indices for j in range(len(x_unseen_test[i]))]
+                sent_tags = [idx2tag_dict[y_unseen_test[i][j]] for j in range(len(x_unseen_test[i]))]
+                sent_predictions = [idx2tag_dict[predictions[i][j]] for j in range(len(x_unseen_test[i]))]
+
+                # remove padding
+                sent_words_no_padd = [word for word in sent_words if word != padd_symbol]
+                sent_tags_no_padd = [tag for tag in sent_tags if tag != padd_symbol]
+                sent_predictions_no_padd = [sent_predictions[i] for i in range(len(sent_tags)) if sent_tags[i] != padd_symbol]
+
+                # add special mark for conditioned words
+                if condition == "unseen":
+                    sent_words_with_condition = [raw_sent[i] + "(*)" if sent_words[i] == unk_symbol else raw_sent[i]
+                                                for i in range(len(sent_words_no_padd))]
+                else:
+                    sent_words_with_condition = [raw_sent[i] + "(*)" if ambig_indication[i] else raw_sent[i]
+                                                for i in range(len(sent_words_no_padd))]
+                # write the results
+                sent_write_indices = ["{0}) ".format(i) for i in range(len(sent_words_with_condition))]
+                sent_indices = [i + w for i, w in zip(sent_write_indices, sent_words_with_condition)]
+                tag_indices = [i + t for i, t in zip(sent_write_indices, sent_tags_no_padd)]
+                predictions_indices = [i + p for i, p in zip(sent_write_indices, sent_predictions_no_padd)]
+
+                # write words
+                f.write("Sentence:\t")
+                f.write(" ".join(sent_indices) + "\n")
+
+                # write tags
+                f.write("True labels:\t")
+                f.write(" ".join(tag_indices) + "\n")
+
+                # write predictions
+                f.write("Predictions:\t")
+                f.write(" ".join(predictions_indices) + "\n")
+
+                # write sentence separator
+                f.write("-----------------------------\n\n")
+
     def predict(self, sentences):
         predictions = self.model.predict(sentences)
         return np.argmax(predictions, axis=2)

@@ -253,6 +253,11 @@ class DataProcessor(object):
     def get_name(self):
         return self.name
 
+    def get_raw_sentences(self, sample_path):
+        sents_with_tags = self.read_file(sample_path)
+        sents = [[w for w, _, _ in sent] for sent in sents_with_tags]
+        return sents
+
     def preprocess_sample(self, sample_path):
         if self.word2idx is None or self.tag2idx is None or self.features2idx is None:
             raise AssertionError(
