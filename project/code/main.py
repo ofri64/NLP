@@ -61,7 +61,7 @@ def run_experiment(processor, tagger, train_path, test_path, load_processor=None
 
         else:  # train a processor using the training data
             processor.process(train_path)
-            processor.save()
+            processor.save(file_path=load_processor_path)
 
         if _all:
             features = processor.get_features()
@@ -182,17 +182,18 @@ def main(language, feature, n_epochs, times, remote, features, remote_stop, _all
         print('\r\n')
         return
 
-    processor = DataProcessor(name=language)
-
     if _all:
         experiment_name = '{0}_all'.format(language)
+        processor = DataProcessor(name=experiment_name)
         tagger = MTLAllFeaturesTagger(processor, n_epochs=n_epochs, hidden_size=hidden_size, embed_size=embedding_size)
     elif feature:
         experiment_name = '{0}_{1}'.format(language, feature)
+        processor = DataProcessor(name=experiment_name)
         tagger = MTLOneFeatureTagger(processor, n_epochs=n_epochs, feature=feature, hidden_size=hidden_size,
                                      embed_size=embedding_size)
     else:
         experiment_name = language
+        processor = DataProcessor(name=experiment_name)
         tagger = SimpleTagger(processor, n_epochs=n_epochs, hidden_size=hidden_size, embed_size=embedding_size)
 
     all_acc, all_unseen_acc, all_ambig_acc = 0, 0, 0
