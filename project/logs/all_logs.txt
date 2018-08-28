@@ -1,0 +1,246 @@
+-----------
+Experiment:			english_ewt_train_gum_test
+Accuracy:			0.9523633258489379
+Unseen Accuracy:	0.8049301242236024
+Ambiguous Accuracy:	0.9280515330577465
+Hidden Size:		100
+Embedding Size:		50
+-----------
+
+-----------
+Experiment:			english_ewt_train_gum_test_tense
+Accuracy:			0.9526081998690386
+Unseen Accuracy:	0.8017274844720497
+Ambiguous Accuracy:	0.9304354441936548
+Hidden Size:		100
+Embedding Size:		50
+-----------
+
+-----------
+Experiment:			english_ewt_train_gum_test_person
+Accuracy:			0.9521184518288371
+Unseen Accuracy:	0.8080357142857143
+Ambiguous Accuracy:	0.9278993685171566
+Hidden Size:		100
+Embedding Size:		50
+-----------
+
+-----------
+Experiment:			english_ewt_train_gum_test_verbform
+Accuracy:			0.9517312053938933
+Unseen Accuracy:	0.8030861801242236
+Ambiguous Accuracy:	0.927316071111562
+Hidden Size:		100
+Embedding Size:		50
+-----------
+
+-----------
+Experiment:			english_ewt_train_gum_test_gender
+Accuracy:			0.9526594546226814
+Unseen Accuracy:	0.8057065217391305
+Ambiguous Accuracy:	0.9284319444092212
+Hidden Size:		100
+Embedding Size:		50
+-----------
+
+-----------
+Experiment:			english_ewt_train_gum_test_prontype
+Accuracy:			0.9530523914682566
+Unseen Accuracy:	0.8089091614906833
+Ambiguous Accuracy:	0.9290913240851107
+Hidden Size:		100
+Embedding Size:		50
+-----------
+
+-----------
+Experiment:			english_ewt_train_gum_test_all
+Accuracy:			0.9517482936789615
+Unseen Accuracy:	0.8069681677018633
+Ambiguous Accuracy:	0.9260987547868429
+Hidden Size:		100
+Embedding Size:		50
+-----------
+
+-----------
+Experiment:			japanese_gsd_train_pud_test
+Accuracy:			0.9647000012397766
+Unseen Accuracy:	0.8598070739549839
+Ambiguous Accuracy:	0.9616508400292184
+Hidden Size:		100
+Embedding Size:		50
+-----------
+
+-----------
+Experiment:			japanese_gsd_train_pud_test_all
+Accuracy:			0.9604250020980835
+Unseen Accuracy:	0.8559485530546623
+Ambiguous Accuracy:	0.9557158509861212
+Hidden Size:		100
+Embedding Size:		50
+-----------
+
+-----------
+Experiment:			italian_isdt_postwita
+Accuracy:			0.895303887163458
+Unseen Accuracy:	0.7261667992574914
+Ambiguous Accuracy:	0.8560880684977205
+Hidden Size:		100
+Embedding Size:		50
+-----------
+
+-----------
+Experiment:			italian_isdt_postwita_tense
+Accuracy:			0.8942983751767228
+Unseen Accuracy:	0.7226531424025457
+Ambiguous Accuracy:	0.8525075058378739
+Hidden Size:		100
+Embedding Size:		50
+-----------
+
+-----------
+Experiment:			italian_isdt_postwita_person
+Accuracy:			0.8939855504227736
+Unseen Accuracy:	0.721625563511005
+Ambiguous Accuracy:	0.8514844879350606
+Hidden Size:		100
+Embedding Size:		50
+-----------
+
+-----------
+Experiment:			italian_isdt_postwita_verbform
+Accuracy:			0.8939483075441661
+Unseen Accuracy:	0.7247083001856272
+Ambiguous Accuracy:	0.8514400088958078
+Hidden Size:		100
+Embedding Size:		50
+-----------
+
+-----------
+Experiment:			italian_isdt_postwita_gender
+Accuracy:			0.8915313575780287
+Unseen Accuracy:	0.7200013259082472
+Ambiguous Accuracy:	0.8481707995107306
+Hidden Size:		100
+Embedding Size:		50
+-----------
+
+-----------
+Experiment:			italian_isdt_postwita_prontype
+Accuracy:			0.8960338152326842
+Unseen Accuracy:	0.7311389551843013
+Ambiguous Accuracy:	0.8530634938285333
+Hidden Size:		100
+Embedding Size:		50
+-----------
+
+-----------
+Experiment:			italian_isdt_postwita_all
+Accuracy:			0.8942052725528828
+Unseen Accuracy:	0.7273932643861045
+Ambiguous Accuracy:	0.8524185477593684
+Hidden Size:		100
+Embedding Size:		50
+-----------
+
+-----------
+Experiment:			italian_isdt
+Accuracy:			0.9756931174781537
+Unseen Accuracy:	0.8655030800821355
+Ambiguous Accuracy:	0.9664167282712007
+Hidden Size:		100
+Embedding Size:		50
+-----------
+
+-----------
+Experiment:			italian_isdt_all
+Accuracy:			0.9714388154432833
+Unseen Accuracy:	0.8495893223819302
+Ambiguous Accuracy:	0.9583905375435632
+Hidden Size:		100
+Embedding Size:		50
+-----------
+
+----------------------------------- Results after pulling valid pickle files bug fix ----------------------------------
+
+
+-----------
+Experiment:			english_ewt_train_gum_test
+Accuracy:			0.9526366762799934
+Unseen Accuracy:	0.8040566770186336
+Ambiguous Accuracy:	0.9291674063554056
+Hidden Size:		100
+Embedding Size:		50
+-----------
+
+-----------
+Experiment:			english_ewt_train_gum_test_tense
+Accuracy:			0.9527107083444444
+Unseen Accuracy:	0.8055124223602484
+Ambiguous Accuracy:	0.9284319444092212
+Hidden Size:		100
+Embedding Size:		50
+-----------
+
+-----------
+Experiment:			english_ewt_train_gum_test_person
+Accuracy:			0.9516742590891202
+Unseen Accuracy:	0.8069681677018633
+Ambiguous Accuracy:	0.9267834952194973
+Hidden Size:		100
+Embedding Size:		50
+-----------
+
+-----------
+Experiment:			english_ewt_train_gum_test_verbform
+Accuracy:			0.952750570708907
+Unseen Accuracy:	0.8043478260869565
+Ambiguous Accuracy:	0.9294970961933504
+Hidden Size:		100
+Embedding Size:		50
+-----------
+
+-----------
+Experiment:			english_ewt_train_gum_test_gender
+Accuracy:			0.9508428262686676
+Unseen Accuracy:	0.7984277950310559
+Ambiguous Accuracy:	0.9252872105703634
+Hidden Size:		100
+Embedding Size:		50
+-----------
+
+-----------
+Experiment:			english_ewt_train_gum_test_prontype
+Accuracy:			0.9513211809692731
+Unseen Accuracy:	0.8063858695652174
+Ambiguous Accuracy:	0.9267327737059674
+Hidden Size:		100
+Embedding Size:		50
+-----------
+
+-----------
+Experiment:			english_ewt_train_gum_test_all
+Accuracy:			0.9520728919120476
+Unseen Accuracy:	0.8018245341614907
+Ambiguous Accuracy:	0.9284065836524562
+Hidden Size:		100
+Embedding Size:		50
+-----------
+
+-----------
+Experiment:			german_gsd
+Accuracy:			0.9593046146470148
+Unseen Accuracy:	0.8369069343065694
+Ambiguous Accuracy:	0.9304809101696099
+Hidden Size:		100
+Embedding Size:		50
+-----------
+
+-----------
+Experiment:			german_gsd_all
+Accuracy:			0.9543496671023669
+Unseen Accuracy:	0.8280109489051095
+Ambiguous Accuracy:	0.9234312835904237
+Hidden Size:		100
+Embedding Size:		50
+-----------
+
