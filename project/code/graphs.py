@@ -15,7 +15,7 @@ languages = df.index.values
 plt.xticks(range(len(languages)), languages)
 
 plt.ylabel('Accuracy')
-plt.legend(loc='best')
+plt.legend(['m1', 'm2', 'm3', 'm4'], loc='best')
 
 plt.savefig('{0}.png'.format(graph_name))
 plt.show()
