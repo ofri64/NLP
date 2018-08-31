@@ -20,6 +20,7 @@ for graph_name in ('accuracy', 'ambigous', 'unseen'):
 
     plt.ylabel('Accuracy')
     plt.legend(models, loc='best')
+    plt.ylim((70, 100))
 
     plt.savefig('./images/{0}.png'.format(graph_name))
     plt.show()
