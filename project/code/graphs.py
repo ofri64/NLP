@@ -1,12 +1,5 @@
 import pandas as pd
 import matplotlib.pyplot as plt
-import numpy as np
-
-map = {'Baseline BiLSTM': 1,
-       'SFMTL - Gender': 2,
-       'SFMTL - Tense': 3,
-       'SFMTL - Person': 4,
-       'MFMTL': 5}
 
 for graph_name in ('accuracy', 'ambigous', 'unseen'):
     file_path = './{0}.csv'.format(graph_name)
