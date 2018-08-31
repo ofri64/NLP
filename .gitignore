@@ -110,6 +110,3 @@ ENV/
 # config file
 config.py
 
-#models
-project/models/*
-project/pickles/*
