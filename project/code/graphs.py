@@ -1,23 +1,34 @@
 import pandas as pd
 import matplotlib.pyplot as plt
+import numpy as np
 
-graph_name = 'unseen'
-file_path = './{0}.csv'.format(graph_name)
+map = {'Baseline BiLSTM': 1,
+       'SFMTL - Gender': 2,
+       'SFMTL - Tense': 3,
+       'SFMTL - Person': 4,
+       'MFMTL': 5}
 
-df = pd.read_csv(file_path).transpose()
+for graph_name in ('accuracy', 'ambigous', 'unseen'):
+    file_path = './{0}.csv'.format(graph_name)
 
-plt.figure()
-plt.tight_layout()
+    df = pd.read_csv(file_path).transpose()
+    models = list(df.iloc[0].values)
+    languages = df.index.values[1:]
 
-df.plot(grid=True, style='.-')
+    df.iloc[0] = pd.to_numeric(df.iloc[0], errors='coerce')
+    df.drop(df.index[0], inplace=True)
 
-languages = df.index.values
-plt.xticks(range(len(languages)), languages)
+    plt.figure()
+    plt.tight_layout()
 
-plt.ylabel('Accuracy')
-plt.legend(['m1', 'm2', 'm3', 'm4'], loc='best')
+    df.plot(grid=True, style='.-')
 
-plt.savefig('{0}.png'.format(graph_name))
-plt.show()
+    plt.xticks(range(len(languages)), languages)
+
+    plt.ylabel('Accuracy')
+    plt.legend(models, loc='best')
+
+    plt.savefig('{0}.png'.format(graph_name))
+    plt.show()
 
 
